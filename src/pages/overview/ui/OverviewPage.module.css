@@ -466,4 +466,11 @@
     grid-template-columns: 1fr 1fr;
     gap: 4px 10px;
   }
+  .eventRow > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .events {
+    overflow-x: hidden;
+  }
 }
