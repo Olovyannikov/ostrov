@@ -166,3 +166,23 @@
   font-size: 11px;
   color: var(--muted);
 }
+
+/* ── Mobile: off-canvas drawer ── */
+@media (max-width: 768px) {
+  .sidebar,
+  .sidebar.collapsed {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 240px;
+    min-width: 240px;
+    z-index: 300;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 4px 0 24px rgba(15, 23, 42, 0.18);
+  }
+  .sidebar.mobileOpen {
+    transform: translateX(0);
+  }
+}

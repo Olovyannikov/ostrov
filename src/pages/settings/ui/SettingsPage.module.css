@@ -561,3 +561,20 @@
   color: var(--muted);
   margin-top: 2px;
 }
+
+@media (max-width: 768px) {
+  .settingsWrap {
+    flex-direction: column;
+  }
+  .settingsTabs {
+    width: auto;
+    min-width: 0;
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .settingsContent {
+    padding: 16px;
+  }
+}

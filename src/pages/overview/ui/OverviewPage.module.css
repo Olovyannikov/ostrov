@@ -439,3 +439,24 @@
   border: 1px solid var(--border);
   opacity: 0.6;
 }
+
+@media (max-width: 900px) {
+  .kpiStrip {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .sitesGrid {
+    grid-template-columns: 1fr;
+  }
+  .content {
+    padding: 14px;
+  }
+  .tableHeader {
+    display: none;
+  }
+  .eventRow {
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 10px;
+  }
+}

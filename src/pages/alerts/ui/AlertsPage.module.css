@@ -517,3 +517,12 @@
   border-color: #94a3b8;
   color: var(--text);
 }
+
+@media (max-width: 768px) {
+  .eventsWrap {
+    overflow-x: auto;
+  }
+  .filterBar {
+    flex-wrap: wrap;
+  }
+}

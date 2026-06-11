@@ -500,3 +500,9 @@
   text-align: center;
   color: var(--muted);
 }
+
+@media (max-width: 768px) {
+  .tableWrap {
+    overflow-x: auto;
+  }
+}

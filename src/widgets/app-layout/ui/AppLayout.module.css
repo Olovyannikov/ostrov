@@ -8,3 +8,19 @@
   flex-direction: column;
   min-width: 0;
 }
+
+/* Backdrop behind the mobile drawer. */
+.backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 250;
+    background: rgba(15, 23, 42, 0.45);
+    animation: fadeIn 0.15s ease;
+  }
+}
