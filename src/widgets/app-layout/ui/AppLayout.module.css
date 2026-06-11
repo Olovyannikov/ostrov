@@ -9,6 +9,12 @@
   min-width: 0;
   overflow-x: hidden;
 }
+/* Let page content shrink below its intrinsic min-content width (otherwise wide
+   tables/grids force the whole column wider than the mobile viewport). */
+.main > * {
+  min-width: 0;
+  max-width: 100%;
+}
 
 /* Backdrop behind the mobile drawer. */
 .backdrop {

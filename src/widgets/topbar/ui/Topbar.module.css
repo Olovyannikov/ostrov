@@ -35,3 +35,13 @@
   color: var(--faint);
   white-space: nowrap;
 }
+
+@media (max-width: 640px) {
+  .topbar {
+    gap: 8px;
+    padding: 0 12px;
+  }
+  .updated {
+    display: none;
+  }
+}
