@@ -119,12 +119,13 @@ GitHub Actions (`.github/workflows/deploy.yml`) на каждый push в `main`
 Маршруты на проде:
 
 - `/ostrov/` — лендинг и статичные экраны (`/ostrov/overview.html`, …);
-- `/ostrov/app/` — React-приложение (роутинг через `HashRouter`,
-  напр. `/ostrov/app/#/basin/Б-12`).
+- `/ostrov/app/` — React-приложение (роутинг через TanStack Router c hash-историей,
+  напр. `/ostrov/app/#/basin/Б-12`). Интерфейс адаптивный: на мобильных боковое меню
+  сворачивается в бургер-драйвер.
 
 > Данные во всех экранах — мок-данные из прототипов; бэкенда нет.
 
 ## Стек
 
-React 18 · TypeScript · Vite · React Router · Chart.js · Feature-Sliced Design ·
+React 18 · TypeScript · Vite · TanStack Router · Chart.js · Feature-Sliced Design ·
 ESLint · Prettier · Steiger · lefthook · commitlint · commitizen · pnpm.

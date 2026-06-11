@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from '@tanstack/react-router';
 import { Topbar } from '@/widgets/topbar';
 import { StatusBadge, Breadcrumb } from '@/shared/ui';
 import { cn } from '@/shared/lib';
@@ -31,7 +31,7 @@ function basinMatchesFilter(b: Basin, filter: FilterMode): boolean {
 }
 
 export function SitePage() {
-  const { siteId } = useParams<{ siteId: string }>();
+  const { siteId } = useParams({ strict: false });
   const navigate = useNavigate();
 
   const siteEntry = SITE_NAV.find((s) => s.id === siteId);
@@ -57,7 +57,7 @@ export function SitePage() {
 
   const handleBasinClick = useCallback(
     (num: number) => {
-      navigate(basinPath(num));
+      navigate({ to: basinPath(num) });
     },
     [navigate]
   );

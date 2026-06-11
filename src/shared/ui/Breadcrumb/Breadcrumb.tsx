@@ -1,9 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import styles from './Breadcrumb.module.css';
 
 export interface Crumb {
   label: string;
   to?: string;
+  params?: Record<string, string>;
 }
 
 export function Breadcrumb({ items }: { items: Crumb[] }) {
@@ -12,7 +13,7 @@ export function Breadcrumb({ items }: { items: Crumb[] }) {
       {items.map((c, i) => (
         <span key={i} className={styles.row}>
           {c.to ? (
-            <Link className={styles.link} to={c.to}>
+            <Link className={styles.link} to={c.to} params={c.params}>
               {c.label}
             </Link>
           ) : (

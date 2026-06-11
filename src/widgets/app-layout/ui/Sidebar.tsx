@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { Icon, type IconName } from '@/shared/ui';
 import { cn, useSidebar } from '@/shared/lib';
 import { ROUTES, sitePath } from '@/shared/config';
@@ -24,28 +24,31 @@ const MANAGE: NavEntry[] = [
   { to: ROUTES.settings, label: 'Настройки', icon: 'settings' },
 ];
 
-function Item({ entry }: { entry: NavEntry }) {
+function Item({ entry, onNavigate }: { entry: NavEntry; onNavigate: () => void }) {
   return (
-    <NavLink
+    <Link
       to={entry.to}
-      className={({ isActive }) => cn(styles.navItem, isActive && styles.active)}
+      onClick={onNavigate}
+      className={styles.navItem}
+      activeProps={{ className: cn(styles.navItem, styles.active) }}
     >
       <Icon name={entry.icon} className={styles.navIcon} />
       <span className={styles.navLabel}>{entry.label}</span>
       {entry.badge && <span className={styles.navBadge}>{entry.badge}</span>}
-    </NavLink>
+    </Link>
   );
 }
 
 export function Sidebar() {
-  const { collapsed } = useSidebar();
-  const { pathname } = useLocation();
+  const { collapsed, mobileOpen, closeMobile } = useSidebar();
   const [sitesOpen, setSitesOpen] = useState(true);
   const dot = (s: string) =>
     s === 'ok' ? styles.dotOk : s === 'warn' ? styles.dotWarn : styles.dotAlarm;
 
   return (
-    <aside className={cn(styles.sidebar, collapsed && styles.collapsed)}>
+    <aside
+      className={cn(styles.sidebar, collapsed && styles.collapsed, mobileOpen && styles.mobileOpen)}
+    >
       <div className={styles.logo}>
         <div className={styles.logoIcon}>
           <Icon name="layers" size={18} stroke="#fff" />
@@ -59,7 +62,7 @@ export function Sidebar() {
       <nav className={styles.nav}>
         <div className={styles.label}>Навигация</div>
         {TOP.map((e) => (
-          <Item key={e.to} entry={e} />
+          <Item key={e.to} entry={e} onNavigate={closeMobile} />
         ))}
 
         <div className={cn(styles.group, sitesOpen && styles.groupOpen)}>
@@ -70,32 +73,32 @@ export function Sidebar() {
           </div>
           <div className={styles.children}>
             {SITE_NAV.map((s) => (
-              <NavLink
+              <Link
                 key={s.id}
                 to={sitePath(s.id)}
-                className={({ isActive }) =>
-                  cn(styles.child, (isActive || pathname === sitePath(s.id)) && styles.childActive)
-                }
+                onClick={closeMobile}
+                className={styles.child}
+                activeProps={{ className: cn(styles.child, styles.childActive) }}
               >
                 <span className={cn(styles.childDot, dot(s.status))} />
                 <span>{s.name}</span>
-              </NavLink>
+              </Link>
             ))}
           </div>
         </div>
 
-        <Item entry={DUTY} />
+        <Item entry={DUTY} onNavigate={closeMobile} />
 
         <div className={styles.divider} />
         <div className={styles.label}>События</div>
         {EVENTS.map((e) => (
-          <Item key={e.to} entry={e} />
+          <Item key={e.to} entry={e} onNavigate={closeMobile} />
         ))}
 
         <div className={styles.divider} />
         <div className={styles.label}>Управление</div>
         {MANAGE.map((e) => (
-          <Item key={e.to} entry={e} />
+          <Item key={e.to} entry={e} onNavigate={closeMobile} />
         ))}
       </nav>
 

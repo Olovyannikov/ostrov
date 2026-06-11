@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@tanstack/react-router':
+        specifier: ^1.95.1
+        version: 1.170.15(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       chart.js:
         specifier: ^4.4.6
         version: 4.5.1
@@ -20,9 +23,6 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
-      react-router-dom:
-        specifier: ^6.28.0
-        version: 6.30.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
       '@commitlint/cli':
         specifier: ^19.6.0
@@ -505,10 +505,6 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@remix-run/router@1.23.3':
-    resolution: {integrity: sha512-4An71tdz9X8+3sI4Qqqd2LWd9vS39J7sqd9EU4Scw7TJE/qB10Flv/UuqbPVgfQV9XoK8Np6jNquZitnZq5i+Q==}
-    engines: {node: '>=14.0.0'}
-
   '@rolldown/pluginutils@1.0.0-beta.27':
     resolution: {integrity: sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA==}
 
@@ -657,6 +653,30 @@ packages:
   '@sindresorhus/merge-streams@2.3.0':
     resolution: {integrity: sha512-LtoMMhxAlorcGhmFYI+LhPgbPZCkgP6ra1YL604EeF6U98pLlQ3iWIGMdWSC+vWmPBWBNgmDBAhnAobLROJmwg==}
     engines: {node: '>=18'}
+
+  '@tanstack/history@1.162.0':
+    resolution: {integrity: sha512-79pf/RkhteYZTRgcR4F9kbk84P2N8rugQJswxfIqovlbRiT3yI7eBE+5QorIrZaOKktsgzRlXh1l/du/xpl4iA==}
+    engines: {node: '>=20.19'}
+
+  '@tanstack/react-router@1.170.15':
+    resolution: {integrity: sha512-GawYz7HEjj8rTUUDoT/SemDEVm63pZUO+2mOcXHY9Jl3EwMS5gFBnPu/2UvcrwRm1jN1k79fokc0d4aFmrLatg==}
+    engines: {node: '>=20.19'}
+    peerDependencies:
+      react: '>=18.0.0 || >=19.0.0'
+      react-dom: '>=18.0.0 || >=19.0.0'
+
+  '@tanstack/react-store@0.9.3':
+    resolution: {integrity: sha512-y2iHd/N9OkoQbFJLUX1T9vbc2O9tjH0pQRgTcx1/Nz4IlwLvkgpuglXUx+mXt0g5ZDFrEeDnONPqkbfxXJKwRg==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@tanstack/router-core@1.171.13':
+    resolution: {integrity: sha512-+NOwEj1kO/6IGmpHRIZHasYxYWpyBQGNIZAST9aNrk9Q3YlU9SgqVnl1pbLa9qAKfeNdXQIRve0RQb/0kyDeDA==}
+    engines: {node: '>=20.19'}
+
+  '@tanstack/store@0.9.3':
+    resolution: {integrity: sha512-8reSzl/qGWGGVKhBoxXPMWzATSbZLZFWhwBAFO9NAyp0TxzfBP0mIrGb8CP8KrQTmvzXlR/vFPPUrHTLBGyFyw==}
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -965,6 +985,9 @@ packages:
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
+
+  cookie-es@3.1.1:
+    resolution: {integrity: sha512-UaXxwISYJPTr9hwQxMFYZ7kNhSXboMXP+Z3TRX6f1/NyaGPfuNUZOWP1pUEb75B2HjfklIYLVRfWiFZJyC6Npg==}
 
   cosmiconfig-typescript-loader@6.3.0:
     resolution: {integrity: sha512-Akr82WH1Wfqatyiqpj8HDkO2o2KmJRu1FhKfSNJP3K4IdXwHfEyL7MOb62i1AGQVLtIQM+iCE9CGOtrfhR+mmA==}
@@ -1454,6 +1477,10 @@ packages:
     resolution: {integrity: sha512-eXK1UInq2bPmjyX6e3VHIzMLobc4J94i4AWn+Hpq3OU5KkrRC96OAcR3PRJ/pGu6m8TRnBHP9dkXQVsT/COVIA==}
     engines: {node: '>=0.10.0'}
 
+  isbot@5.1.42:
+    resolution: {integrity: sha512-/SXsVh7KpPRISrD4ffrGSxnTLlUBzEQUfWIusaJPrpJ93FW1P0YEZri5vAUkFsA0m2HRUhQRQadk2wJ+EeKowQ==}
+    engines: {node: '>=18'}
+
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
@@ -1829,19 +1856,6 @@ packages:
     resolution: {integrity: sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ==}
     engines: {node: '>=0.10.0'}
 
-  react-router-dom@6.30.4:
-    resolution: {integrity: sha512-q4HvNl+mmDdkS0g+MqiBZNteQJCuimWoOyHMy4T/RQLAn9Z29+E91QXRaxOujeMl2HTzRSS0KFPd7lxX3PjV0Q==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      react: '>=16.8'
-      react-dom: '>=16.8'
-
-  react-router@6.30.4:
-    resolution: {integrity: sha512-SVUsDe+DybHM/WmYKIVYhZh1o5Dcuf16yM6WjG02Q9XVFMZIJyHYhwrr6bFBXZkVP6z69kNkMyBCujt8FaFLJA==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      react: '>=16.8'
-
   react@18.3.1:
     resolution: {integrity: sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==}
     engines: {node: '>=0.10.0'}
@@ -1914,6 +1928,16 @@ packages:
     resolution: {integrity: sha512-rUCObTnP32Q08R2uuIrt7r9PlEonuTmtuXYcW6s5kjdlj3xbnwe+21yXptAUYcMAABLkYYTtnmzb3w3EDZfueA==}
     engines: {node: '>=10'}
     hasBin: true
+
+  seroval-plugins@1.5.4:
+    resolution: {integrity: sha512-S0xQPhUTefAhNvNWFg0c1J8qJArHt5KdtJ/cFAofo06KD1MVSeFWyl4iiu+ApDIuw0WhjpOfCdgConOfAnLgkw==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      seroval: ^1.0
+
+  seroval@1.5.4:
+    resolution: {integrity: sha512-46uFvgrXTVxZcUorgSSRZ4y+ieqLLQRMlG4bnCZKW3qI6BZm7Rg4ntMW4p1mILEEBZWrFlcpp0AyIIlM6jD9iw==}
+    engines: {node: '>=10'}
 
   shebang-command@2.0.0:
     resolution: {integrity: sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA==}
@@ -2061,6 +2085,11 @@ packages:
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
+
+  use-sync-external-store@1.6.0:
+    resolution: {integrity: sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
@@ -2625,8 +2654,6 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@remix-run/router@1.23.3': {}
-
   '@rolldown/pluginutils@1.0.0-beta.27': {}
 
   '@rollup/rollup-android-arm-eabi@4.61.1':
@@ -2708,6 +2735,33 @@ snapshots:
     optional: true
 
   '@sindresorhus/merge-streams@2.3.0': {}
+
+  '@tanstack/history@1.162.0': {}
+
+  '@tanstack/react-router@1.170.15(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@tanstack/history': 1.162.0
+      '@tanstack/react-store': 0.9.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@tanstack/router-core': 1.171.13
+      isbot: 5.1.42
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
+  '@tanstack/react-store@0.9.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@tanstack/store': 0.9.3
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      use-sync-external-store: 1.6.0(react@18.3.1)
+
+  '@tanstack/router-core@1.171.13':
+    dependencies:
+      '@tanstack/history': 1.162.0
+      cookie-es: 3.1.1
+      seroval: 1.5.4
+      seroval-plugins: 1.5.4(seroval@1.5.4)
+
+  '@tanstack/store@0.9.3': {}
 
   '@types/babel__core@7.20.5':
     dependencies:
@@ -3085,6 +3139,8 @@ snapshots:
     optional: true
 
   convert-source-map@2.0.0: {}
+
+  cookie-es@3.1.1: {}
 
   cosmiconfig-typescript-loader@6.3.0(@types/node@22.19.20)(cosmiconfig@9.0.2(typescript@5.9.3))(typescript@5.9.3):
     dependencies:
@@ -3601,6 +3657,8 @@ snapshots:
 
   is-windows@1.0.2: {}
 
+  isbot@5.1.42: {}
+
   isexe@2.0.0: {}
 
   jiti@2.6.1: {}
@@ -3925,18 +3983,6 @@ snapshots:
 
   react-refresh@0.17.0: {}
 
-  react-router-dom@6.30.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@remix-run/router': 1.23.3
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-      react-router: 6.30.4(react@18.3.1)
-
-  react-router@6.30.4(react@18.3.1):
-    dependencies:
-      '@remix-run/router': 1.23.3
-      react: 18.3.1
-
   react@18.3.1:
     dependencies:
       loose-envify: 1.4.0
@@ -4021,6 +4067,12 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.8.4: {}
+
+  seroval-plugins@1.5.4(seroval@1.5.4):
+    dependencies:
+      seroval: 1.5.4
+
+  seroval@1.5.4: {}
 
   shebang-command@2.0.0:
     dependencies:
@@ -4154,6 +4206,10 @@ snapshots:
   uri-js@4.4.1:
     dependencies:
       punycode: 2.3.1
+
+  use-sync-external-store@1.6.0(react@18.3.1):
+    dependencies:
+      react: 18.3.1
 
   util-deprecate@1.0.2: {}
 

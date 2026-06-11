@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { Topbar } from '@/widgets/topbar';
 import { Icon, StatusBadge } from '@/shared/ui';
 import { cn } from '@/shared/lib';
@@ -64,7 +64,7 @@ export function OverviewPage() {
             <div
               key={site.id}
               className={cn(styles.siteCard, styles[site.status])}
-              onClick={() => navigate(sitePath(site.id))}
+              onClick={() => navigate({ to: sitePath(site.id) })}
             >
               <div className={styles.cardHeader}>
                 <div>
