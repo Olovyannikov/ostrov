@@ -1,0 +1,26 @@
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.link {
+  cursor: pointer;
+  color: var(--primary);
+}
+.link:hover {
+  text-decoration: underline;
+}
+.sep {
+  color: var(--faint);
+}
+.current {
+  color: var(--text);
+  font-weight: 600;
+}

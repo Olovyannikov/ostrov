@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Бассейн Б-12 — Карджин — Остров</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f1f5f9;--surface:#fff;--border:#e2e8f0;--text:#1e293b;
+  --muted:#64748b;--faint:#94a3b8;
+  --primary:#0284c7;--primary-bg:#e0f2fe;
+  --ok:#16a34a;--ok-bg:#dcfce7;--ok-border:#86efac;
+  --warn:#b45309;--warn-bg:#fef9c3;--warn-border:#fde047;
+  --alarm:#b91c1c;--alarm-bg:#fee2e2;--alarm-border:#fca5a5;
+  --radius:10px;--font:'Inter','Segoe UI',system-ui,sans-serif;
+}
+body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex;min-height:100vh;font-size:14px}
+
+/* SIDEBAR */
+.sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.logo-icon{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#0ea5e9,#0284c7);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon svg{width:18px;height:18px}
+.logo-name{font-size:15px;font-weight:700}.logo-sub{font-size:10px;color:var(--muted)}
+.sidebar-nav{flex:1;overflow-y:auto;padding:10px 8px}
+.nav-lbl{font-size:10px;font-weight:600;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;padding:8px 8px 4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--muted)}
+.nav-item:hover{background:#f0f9ff;color:var(--primary)}
+.nav-icon{width:16px;height:16px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px}
+.nav-group-hdr{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--muted)}
+.nav-group-hdr:hover{background:#f8fafc}
+.nav-chevron{margin-left:auto;transition:transform .2s}
+.nav-group.open .nav-chevron{transform:rotate(90deg)}
+.nav-children{display:none;padding-left:16px}
+.nav-group.open .nav-children{display:block}
+.nav-child{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:6px;font-size:12px;color:var(--muted);cursor:pointer}
+.nav-child:hover{background:#f8fafc}
+.nav-child.active{color:var(--primary);font-weight:600}
+.nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-ok{background:var(--ok)}.dot-warn{background:#f59e0b}.dot-alarm{background:#ef4444}
+.nav-divider{height:1px;background:var(--border);margin:8px 0}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.status-txt{font-size:11px;color:var(--muted)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:48px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0}
+.sidebar-toggle{width:30px;height:30px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.sidebar-toggle:hover{background:#f1f5f9}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.bc-link{cursor:pointer;color:var(--primary)}.bc-link:hover{text-decoration:underline}
+.bc-sep{color:var(--faint)}.bc-cur{color:var(--text);font-weight:600}
+.topbar-spacer{flex:1}
+.upd{font-size:12px;color:var(--faint)}
+
+.content{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+
+/* BASIN HEADER */
+.basin-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 20px;border-left:4px solid #ef4444;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.bh-title{font-size:22px;font-weight:700}
+.bh-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.bh-kpis{display:flex;gap:10px;margin-left:auto;flex-wrap:wrap}
+.kpi-box{text-align:center;padding:8px 16px;border-radius:8px;border:1px solid var(--border);min-width:80px}
+.kpi-val{font-size:20px;font-weight:700;line-height:1}
+.kpi-lbl{font-size:10px;color:var(--muted);margin-top:2px}
+.kpi-box.alarm{background:var(--alarm-bg);border-color:var(--alarm-border)}
+.kpi-box.warn{background:var(--warn-bg);border-color:var(--warn-border)}
+.kpi-box.ok{background:var(--ok-bg);border-color:var(--ok-border)}
+.kpi-val.alarm{color:var(--alarm)}.kpi-val.warn{color:var(--warn)}.kpi-val.ok{color:var(--ok)}
+.status-badge{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700;flex-shrink:0}
+.badge-alarm{background:var(--alarm-bg);color:var(--alarm);border:1.5px solid var(--alarm-border)}
+.badge-ok{background:var(--ok-bg);color:var(--ok);border:1.5px solid var(--ok-border)}
+
+/* ACTION BUTTONS */
+.action-row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;
+  font-size:13px;font-weight:600;border:none;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:#0369a1}
+.btn-danger{background:var(--alarm-bg);color:var(--alarm);border:1.5px solid var(--alarm-border)}
+.btn-danger:hover{background:#fecaca}
+.btn-outline{background:var(--surface);color:var(--muted);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:#94a3b8;color:var(--text)}
+.btn svg{width:14px;height:14px}
+
+/* PERIOD TABS */
+.period-tabs{display:flex;gap:4px}
+.ptab{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;
+  border:1px solid var(--border);color:var(--muted);background:var(--surface)}
+.ptab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:900px){.grid-2{grid-template-columns:1fr}.grid-4{grid-template-columns:1fr 1fr}}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.card-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.04em;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+
+/* CHARTS */
+.chart-wrap{position:relative;height:180px}
+
+/* THRESHOLD LINES legend */
+.thresh-legend{display:flex;gap:14px;font-size:11px;color:var(--muted);margin-top:6px}
+.tl-item{display:flex;align-items:center;gap:5px}
+.tl-line{width:20px;height:2px;border-radius:1px}
+
+/* SENSORS TABLE */
+.sensors-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.sensor-item{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.sensor-name{font-size:11px;color:var(--muted);margin-bottom:4px}
+.sensor-val{font-size:18px;font-weight:700;color:var(--text)}
+.sensor-val.ok{color:var(--ok)}.sensor-val.warn{color:var(--warn)}.sensor-val.alarm{color:var(--alarm)}
+.sensor-unit{font-size:11px;color:var(--muted)}
+.sensor-status{font-size:10px;margin-top:4px;font-weight:600}
+.sensor-status.ok{color:var(--ok)}.sensor-status.warn{color:var(--warn)}.sensor-status.alarm{color:var(--alarm)}
+
+/* FEEDER CONTROL */
+.feeder-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.feeder-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.feeder-status{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.feeder-dot{width:12px;height:12px;border-radius:50%;background:var(--ok)}
+.toggle-switch{position:relative;width:48px;height:26px;cursor:pointer}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-track{position:absolute;inset:0;background:#cbd5e1;border-radius:13px;transition:.3s}
+.toggle-switch input:checked+.toggle-track{background:var(--ok)}
+.toggle-knob{position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;
+  border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle-switch input:checked~.toggle-knob{left:25px}
+.feeder-meta{font-size:12px;color:var(--muted)}
+
+/* EVENTS */
+.event-list{display:flex;flex-direction:column;gap:6px}
+.event-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;
+  border-radius:8px;background:#f8fafc;border:1px solid var(--border)}
+.event-item.alarm{background:var(--alarm-bg);border-color:var(--alarm-border)}
+.event-item.warn{background:var(--warn-bg);border-color:var(--warn-border)}
+.event-item.ok{background:var(--ok-bg);border-color:var(--ok-border)}
+.event-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.event-dot.alarm{background:#ef4444}.event-dot.warn{background:#f59e0b}
+.event-dot.ok{background:var(--ok)}.event-dot.service{background:var(--primary)}
+.event-time{font-size:11px;color:var(--muted);white-space:nowrap;margin-top:2px}
+.event-msg{font-size:12px;font-weight:500;color:var(--text);flex:1}
+.event-who{font-size:11px;color:var(--muted)}
+.event-ack{font-size:10px;color:var(--ok);font-weight:600;white-space:nowrap}
+.event-unack{font-size:10px;color:var(--alarm);font-weight:600;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div><div class="logo-name">Остров</div><div class="logo-sub">Система мониторинга</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-lbl">Навигация</div>
+    <div class="nav-item" onclick="location.href='screen-1-ostrov.html'">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Обзор хозяйства
+    </div>
+    <div class="nav-group open" id="sg">
+      <div class="nav-group-hdr" onclick="this.parentElement.classList.toggle('open')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Участки
+        <svg class="nav-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="nav-children">
+        <div class="nav-child"><span class="nav-dot dot-ok"></span>Ардон</div>
+        <div class="nav-child"><span class="nav-dot dot-alarm"></span>Карджин</div>
+        <div class="nav-child"><span class="nav-dot dot-warn"></span>Дарг Кох</div>
+        <div class="nav-child active"><span class="nav-dot dot-ok"></span>5 Озеро</div>
+      </div>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-lbl">События</div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+      Тревоги<span class="nav-badge">3</span>
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Журнал событий
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-lbl">Управление</div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      Отчёты
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Настройки порогов
+    </div>
+  </nav>
+  <div class="sidebar-footer"><div class="status-dot"></div><div class="status-txt">Система активна</div></div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <header class="topbar">
+    <button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="breadcrumb">
+      <span class="bc-link">Обзор хозяйства</span>
+      <span class="bc-sep">›</span>
+      <span class="bc-link">5 Озеро</span>
+      <span class="bc-sep">›</span>
+      <span class="bc-link">Группа A_01–25</span>
+      <span class="bc-sep">›</span>
+      <span class="bc-cur">Бассейн Б-12</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <span class="upd" id="updTimer">Обновлено 5 сек. назад</span>
+  </header>
+
+  <div class="content">
+
+    <!-- BASIN HEADER -->
+    <div class="basin-header">
+      <div>
+        <div class="bh-title">Бассейн Б-12</div>
+        <div class="bh-meta">Участок 5 Озеро · Группа A_01–25 · Датчиков: 5 онлайн</div>
+      </div>
+      <div class="bh-kpis">
+        <div class="kpi-box alarm">
+          <div class="kpi-val alarm">6.4</div><div class="kpi-lbl">O₂ мг/л</div>
+        </div>
+        <div class="kpi-box ok">
+          <div class="kpi-val ok">8.7</div><div class="kpi-lbl">Темп. °C</div>
+        </div>
+        <div class="kpi-box ok">
+          <div class="kpi-val ok">7.1</div><div class="kpi-lbl">pH</div>
+        </div>
+        <div class="kpi-box ok">
+          <div class="kpi-val ok">0.05</div><div class="kpi-lbl">NH4 мг/л</div>
+        </div>
+      </div>
+      <span class="status-badge badge-alarm">🔴 Авария</span>
+    </div>
+
+    <!-- ACTION ROW -->
+    <div class="action-row">
+      <button class="btn btn-danger" onclick="ackAlarm()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Принять аварию
+      </button>
+      <button class="btn btn-outline">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Добавить комментарий
+      </button>
+      <button class="btn btn-outline">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Экспорт данных
+      </button>
+      <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+        <span style="font-size:12px;color:var(--muted)">Период:</span>
+        <div class="period-tabs">
+          <div class="ptab active" onclick="setPeriod(this,'24h')">24ч</div>
+          <div class="ptab" onclick="setPeriod(this,'7d')">7 дней</div>
+          <div class="ptab" onclick="setPeriod(this,'30d')">30 дней</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">
+          Кислород O₂
+          <span style="font-size:11px;color:var(--alarm);font-weight:600">⚠ Критически низкий</span>
+        </div>
+        <div class="chart-wrap"><canvas id="chartO2"></canvas></div>
+        <div class="thresh-legend">
+          <div class="tl-item"><div class="tl-line" style="background:#ef4444;height:2px;border-top:2px dashed #ef4444;background:none"></div>Авария &lt; 7.0</div>
+          <div class="tl-item"><div class="tl-line" style="border-top:2px dashed #f59e0b;background:none"></div>Внимание &lt; 8.0</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Температура</div>
+        <div class="chart-wrap"><canvas id="chartTemp"></canvas></div>
+        <div class="thresh-legend">
+          <div class="tl-item"><div class="tl-line" style="border-top:2px dashed #f59e0b;background:none"></div>Внимание &gt; 9.5 °C</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">pH</div>
+        <div class="chart-wrap"><canvas id="chartPh"></canvas></div>
+        <div class="thresh-legend">
+          <div class="tl-item"><div class="tl-line" style="border-top:2px dashed #f59e0b;background:none"></div>Внимание: 6.5–7.5</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Аммонийный азот NH4</div>
+        <div class="chart-wrap"><canvas id="chartNh4"></canvas></div>
+        <div class="thresh-legend">
+          <div class="tl-item"><div class="tl-line" style="border-top:2px dashed #f59e0b;background:none"></div>Внимание &gt; 0.08</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SENSORS + FEEDER -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Датчики бассейна</div>
+        <div class="sensors-grid">
+          <div class="sensor-item">
+            <div class="sensor-name">O₂ вход (O2-Б12-вх)</div>
+            <div><span class="sensor-val alarm">6.4</span> <span class="sensor-unit">мг/л</span></div>
+            <div class="sensor-status alarm">🔴 Авария</div>
+          </div>
+          <div class="sensor-item">
+            <div class="sensor-name">O₂ выход (O2-Б12-вых)</div>
+            <div><span class="sensor-val alarm">6.1</span> <span class="sensor-unit">мг/л</span></div>
+            <div class="sensor-status alarm">🔴 Авария</div>
+          </div>
+          <div class="sensor-item">
+            <div class="sensor-name">Температура (T-Б12)</div>
+            <div><span class="sensor-val ok">8.7</span> <span class="sensor-unit">°C</span></div>
+            <div class="sensor-status ok">✓ Норма</div>
+          </div>
+          <div class="sensor-item">
+            <div class="sensor-name">pH (pH-Б12)</div>
+            <div><span class="sensor-val ok">7.1</span> <span class="sensor-unit"></span></div>
+            <div class="sensor-status ok">✓ Норма</div>
+          </div>
+          <div class="sensor-item">
+            <div class="sensor-name">NH4 (NH4-Б12)</div>
+            <div><span class="sensor-val ok">0.05</span> <span class="sensor-unit">мг/л</span></div>
+            <div class="sensor-status ok">✓ Норма</div>
+          </div>
+          <div class="sensor-item">
+            <div class="sensor-name">Уровень воды</div>
+            <div><span class="sensor-val ok">1.42</span> <span class="sensor-unit">м</span></div>
+            <div class="sensor-status ok">✓ Норма</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <!-- FEEDER CONTROL -->
+        <div class="feeder-card" style="margin-bottom:16px">
+          <div class="card-title" style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px">Управление кормушкой</div>
+          <div class="feeder-row">
+            <div class="feeder-status">
+              <div class="feeder-dot" id="feederDot"></div>
+              <span id="feederLabel">Кормушка активна</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="feederToggle" checked onchange="toggleFeeder()">
+              <div class="toggle-track"></div>
+              <div class="toggle-knob"></div>
+            </label>
+          </div>
+          <div class="feeder-meta" style="margin-top:10px">
+            Следующая подача: <strong>04:00</strong> · Порция: <strong>2.4 кг</strong> · Суточная норма: <strong>14.4 кг</strong>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button class="btn btn-outline" style="font-size:12px;padding:6px 12px">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Подать сейчас
+            </button>
+            <button class="btn btn-outline" style="font-size:12px;padding:6px 12px">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+              Настройки
+            </button>
+          </div>
+        </div>
+
+        <!-- AERATOR STATUS -->
+        <div class="feeder-card">
+          <div class="card-title" style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px">Аэратор LOXY</div>
+          <div class="feeder-row">
+            <div class="feeder-status">
+              <div class="feeder-dot" style="background:var(--ok)"></div>
+              <span style="color:var(--ok)">Работает · Норма</span>
+            </div>
+          </div>
+          <div class="feeder-meta" style="margin-top:8px">
+            Время работы: <strong>14ч 22мин</strong> · Последняя проверка: <strong>02:00</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVENT LOG -->
+    <div class="card">
+      <div class="card-title">
+        История событий · Б-12
+        <span style="font-size:12px;color:var(--primary);cursor:pointer;font-weight:500;text-transform:none">Полный журнал →</span>
+      </div>
+      <div class="event-list" id="eventList"></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const LABELS   = ["04:00", "04:30", "05:00", "05:30", "06:00", "06:30", "07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00", "23:30", "00:00", "00:30", "01:00", "01:30", "02:00", "02:30", "03:00", "03:30"];
+const O2_DATA  = [9.15, 9.17, 9.39, 9.29, 9.5, 9.51, 9.48, 9.66, 9.57, 9.72, 9.64, 9.67, 9.78, 9.9, 9.68, 9.69, 9.78, 9.84, 9.69, 9.59, 9.7, 9.36, 9.54, 9.29, 9.18, 9.1, 9.08, 9.16, 8.89, 8.95, 8.9, 8.76, 8.76, 6.47, 6.43, 6.45, 6.57, 6.48, 8.54, 8.63, 8.61, 8.59, 8.77, 8.79, 8.7, 8.86, 8.9, 9.07];
+const TEMP_DATA= [8.32, 8.32, 8.42, 8.37, 8.44, 8.5, 8.47, 8.53, 8.51, 8.59, 8.61, 8.6, 8.64, 8.58, 8.61, 8.6, 8.58, 8.55, 8.57, 8.55, 8.48, 8.46, 8.37, 8.4, 8.36, 8.35, 8.3, 8.21, 8.18, 8.18, 8.08, 8.1, 8.04, 8.01, 7.99, 8.04, 7.97, 7.98, 7.99, 8.04, 7.97, 8.02, 8.05, 8.1, 8.12, 8.15, 8.13, 8.17];
+const PH_DATA  = [7.04, 7.09, 7.11, 7.07, 7.09, 7.1, 7.12, 7.14, 7.16, 7.14, 7.13, 7.16, 7.16, 7.17, 7.2, 7.18, 7.16, 7.16, 7.15, 7.11, 7.15, 7.13, 7.12, 7.1, 7.06, 7.05, 7.01, 7.03, 6.98, 6.97, 6.96, 6.95, 6.95, 6.92, 6.91, 6.92, 6.91, 6.92, 6.9, 6.95, 6.94, 6.92, 6.93, 6.95, 6.96, 6.95, 7.01, 7.03];
+const NH4_DATA = [0.05, 0.06, 0.05, 0.06, 0.06, 0.06, 0.06, 0.06, 0.06, 0.07, 0.06, 0.06, 0.07, 0.06, 0.07, 0.07, 0.07, 0.07, 0.06, 0.06, 0.06, 0.06, 0.06, 0.06, 0.06, 0.05, 0.06, 0.06, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.04, 0.04, 0.04, 0.04, 0.04, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05];
+const EVENTS   = [{"time": "03:12", "type": "alarm", "msg": "Критически низкий O₂: 6.4 мг/л", "who": "Система", "ack": false}, {"time": "03:10", "type": "alarm", "msg": "Низкий O₂: 7.1 мг/л", "who": "Система", "ack": false}, {"time": "02:47", "type": "warn", "msg": "O₂ ниже порога предупреждения: 7.8 мг/л", "who": "Система", "ack": true}, {"time": "01:30", "type": "ok", "msg": "Кормушка перезапущена", "who": "Иванов А.", "ack": true}, {"time": "00:15", "type": "service", "msg": "Плановая проверка датчика O2-Б12-вых", "who": "Петров В.", "ack": true}];
+
+// ── CHARTS ──
+const chartDefaults = {
+  type: 'line',
+  options: {
+    responsive: true, maintainAspectRatio: false, animation: false,
+    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+    scales: {
+      x: { grid: { color: '#f1f5f9' }, ticks: { maxTicksLimit: 8, font: { size: 10 }, color: '#94a3b8' } },
+      y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 }, color: '#94a3b8' } }
+    },
+    elements: { point: { radius: 0, hoverRadius: 4 }, line: { tension: 0.3, borderWidth: 2 } }
+  }
+};
+
+function makeChart(id, data, color, alarmLine, warnLine, unit) {
+  const ctx = document.getElementById(id).getContext('2d');
+  const datasets = [{
+    data: data,
+    borderColor: color,
+    backgroundColor: color + '18',
+    fill: true,
+    label: unit
+  }];
+  if (alarmLine) datasets.push({
+    data: Array(data.length).fill(alarmLine),
+    borderColor: '#ef4444', borderDash: [5,3], borderWidth: 1.5,
+    pointRadius: 0, fill: false, label: 'Авария'
+  });
+  if (warnLine) datasets.push({
+    data: Array(data.length).fill(warnLine),
+    borderColor: '#f59e0b', borderDash: [5,3], borderWidth: 1.5,
+    pointRadius: 0, fill: false, label: 'Внимание'
+  });
+  return new Chart(ctx, {
+    ...chartDefaults,
+    data: { labels: LABELS, datasets },
+    options: { ...chartDefaults.options }
+  });
+}
+
+makeChart('chartO2',   O2_DATA,   '#ef4444', 7.0, 8.0, 'O₂ мг/л');
+makeChart('chartTemp', TEMP_DATA, '#0284c7', null, 9.5, '°C');
+makeChart('chartPh',   PH_DATA,   '#8b5cf6', null, null, 'pH');
+makeChart('chartNh4',  NH4_DATA,  '#16a34a', null, 0.08, 'мг/л');
+
+// ── EVENTS ──
+function buildEvents() {
+  const list = document.getElementById('eventList');
+  list.innerHTML = '';
+  EVENTS.forEach(e => {
+    const item = document.createElement('div');
+    item.className = 'event-item ' + e.type;
+    item.innerHTML = `
+      <div class="event-dot ${e.type}"></div>
+      <div style="flex:1">
+        <div class="event-msg">${e.msg}</div>
+        <div class="event-who" style="margin-top:2px">${e.who}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="event-time">${e.time}</div>
+        <div class="${e.ack ? 'event-ack' : 'event-unack'}" style="margin-top:3px">${e.ack ? '✓ Принято' : '! Не принято'}</div>
+      </div>`;
+    list.appendChild(item);
+  });
+}
+buildEvents();
+
+// ── CONTROLS ──
+function ackAlarm() {
+  const btn = event.target.closest('button');
+  btn.textContent = '✓ Авария принята';
+  btn.style.background = '#dcfce7';
+  btn.style.color = '#16a34a';
+  btn.style.borderColor = '#86efac';
+  btn.disabled = true;
+}
+
+function toggleFeeder() {
+  const on = document.getElementById('feederToggle').checked;
+  document.getElementById('feederDot').style.background = on ? '#16a34a' : '#cbd5e1';
+  document.getElementById('feederLabel').textContent = on ? 'Кормушка активна' : 'Кормушка выключена';
+}
+
+function setPeriod(el, p) {
+  document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// timer
+let secs = 5;
+setInterval(() => {
+  secs++; if(secs>60) secs=1;
+  document.getElementById('updTimer').textContent = 'Обновлено ' + secs + ' сек. назад';
+}, 1000);
+</script>
+</body>
+</html>

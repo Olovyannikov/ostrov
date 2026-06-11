@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Настройки — Остров</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f1f5f9;--surface:#fff;--border:#e2e8f0;--text:#1e293b;
+  --muted:#64748b;--faint:#94a3b8;
+  --primary:#0284c7;--primary-bg:#e0f2fe;--primary-hover:#0369a1;
+  --ok:#16a34a;--ok-bg:#dcfce7;
+  --warn:#b45309;--warn-bg:#fef9c3;
+  --alarm:#b91c1c;--alarm-bg:#fee2e2;
+  --radius:10px;--font:'Inter','Segoe UI',system-ui,sans-serif;
+}
+body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex;min-height:100vh;font-size:14px}
+
+/* SIDEBAR */
+.sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.logo-icon{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#0ea5e9,#0284c7);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-name{font-size:15px;font-weight:700}.logo-sub{font-size:10px;color:var(--muted)}
+.sidebar-nav{flex:1;overflow-y:auto;padding:10px 8px}
+.nav-lbl{font-size:10px;font-weight:600;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;padding:8px 8px 4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--muted)}
+.nav-item:hover{background:#f0f9ff;color:var(--primary)}
+.nav-item.active{background:#e0f2fe;color:var(--primary);font-weight:600}
+.nav-icon{width:16px;height:16px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px}
+.nav-group-hdr{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--muted)}
+.nav-group-hdr:hover{background:#f8fafc}
+.nav-chevron{margin-left:auto;transition:transform .2s}
+.nav-group.open .nav-chevron{transform:rotate(90deg)}
+.nav-children{display:none;padding-left:16px}
+.nav-group.open .nav-children{display:block}
+.nav-child{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:6px;font-size:12px;color:var(--muted);cursor:pointer}
+.nav-child:hover{background:#f8fafc}
+.nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-ok{background:var(--ok)}.dot-warn{background:#f59e0b}.dot-alarm{background:#ef4444}
+.nav-divider{height:1px;background:var(--border);margin:8px 0}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.status-txt{font-size:11px;color:var(--muted)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:48px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0}
+.topbar-spacer{flex:1}
+.upd{font-size:12px;color:var(--faint)}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.bc-sep{color:var(--faint)}.bc-cur{color:var(--text);font-weight:600}.bc-link{color:var(--primary);cursor:pointer}
+.sidebar-toggle{width:30px;height:30px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.sidebar-toggle:hover{background:#f1f5f9}
+
+/* SETTINGS LAYOUT */
+.settings-wrap{flex:1;display:flex;overflow:hidden}
+.settings-tabs{width:200px;min-width:200px;border-right:1px solid var(--border);background:var(--surface);padding:16px 10px;display:flex;flex-direction:column;gap:2px}
+.stab{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s}
+.stab:hover{background:var(--bg);color:var(--text)}
+.stab.active{background:var(--primary-bg);color:var(--primary);font-weight:600}
+.stab svg{width:15px;height:15px;flex-shrink:0}
+.settings-content{flex:1;overflow-y:auto;padding:24px}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card:last-child{margin-bottom:0}
+.card-title{font-size:14px;font-weight:700;margin-bottom:4px}
+.card-sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+.card-divider{height:1px;background:var(--border);margin:16px 0}
+
+/* FORM */
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.f-group{display:flex;flex-direction:column;gap:5px}
+.f-group.full{grid-column:span 2}
+.f-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{
+  width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;
+  font-size:13px;color:var(--text);background:var(--surface);outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px #bae6fd55}
+textarea{resize:vertical;min-height:70px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-hover)}
+.btn-outline{background:var(--surface);color:var(--muted);border:1.5px solid var(--border)}.btn-outline:hover{color:var(--text);border-color:#94a3b8}
+.btn-danger{background:var(--alarm-bg);color:var(--alarm);border:1px solid #fca5a5}.btn-danger:hover{background:#fecaca}
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.btn svg{width:14px;height:14px}
+
+/* USERS TABLE */
+.utable-wrap{border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.utable{width:100%;border-collapse:collapse;font-size:13px}
+.utable th{background:#f8fafc;padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)}
+.utable td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.utable tr:last-child td{border-bottom:none}
+.utable tr:hover td{background:#fafafa}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--primary-bg);color:var(--primary);font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.role-pill{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;display:inline-block}
+.role-admin{background:#ede9fe;color:#6d28d9}
+.role-duty{background:var(--primary-bg);color:var(--primary)}
+.role-viewer{background:#f1f5f9;color:var(--muted)}
+.tbl-actions{display:flex;gap:6px}
+.icon-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s}
+.icon-btn:hover{background:var(--bg);color:var(--text)}
+.icon-btn.danger:hover{background:var(--alarm-bg);color:var(--alarm);border-color:#fca5a5}
+.icon-btn svg{width:13px;height:13px}
+
+/* THRESHOLDS TABLE */
+.thresh-table{width:100%;border-collapse:collapse;font-size:13px}
+.thresh-table th{background:#f8fafc;padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)}
+.thresh-table td{padding:8px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.thresh-table tr:last-child td{border-bottom:none}
+.thresh-input{width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center}
+.thresh-input:focus{border-color:var(--primary);outline:none}
+.param-name{font-weight:600}
+.param-unit{font-size:11px;color:var(--muted);margin-left:4px}
+.level-warn{color:var(--warn);font-weight:600}
+.level-alarm{color:var(--alarm);font-weight:600}
+
+/* TOGGLE SWITCH */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9}
+.toggle-row:last-child{border-bottom:none}
+.toggle-info .toggle-name{font-size:13px;font-weight:600}
+.toggle-info .toggle-desc{font-size:11px;color:var(--muted);margin-top:2px}
+.toggle{position:relative;width:38px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:#cbd5e1;border-radius:11px;cursor:pointer;transition:.25s}
+.toggle input:checked+.toggle-track{background:var(--primary)}
+.toggle-track::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:3px;left:3px;transition:.25s;box-shadow:0 1px 3px #0003}
+.toggle input:checked+.toggle-track::after{left:19px}
+
+/* NOTIFY CHANNEL */
+.channel-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.channel-card{border:1.5px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;transition:all .15s;text-align:center}
+.channel-card:hover{border-color:var(--primary)}
+.channel-card.active{border-color:var(--primary);background:var(--primary-bg)}
+.channel-icon{width:32px;height:32px;margin:0 auto 6px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center}
+.channel-card.active .channel-icon{background:var(--primary);color:#fff}
+.channel-icon svg{width:16px;height:16px}
+.channel-name{font-size:12px;font-weight:600}
+.channel-status{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* PROFILE AVATAR */
+.profile-top{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.profile-avatar{width:56px;height:56px;border-radius:50%;background:var(--primary-bg);color:var(--primary);font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #bae6fd}
+.profile-name{font-size:16px;font-weight:700}
+.profile-role{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* SECTION HEADER */
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-size:14px;font-weight:700}
+
+/* BADGE */
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+.badge-ok{background:var(--ok-bg);color:var(--ok)}
+.badge-warn{background:var(--warn-bg);color:var(--warn)}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div><div class="logo-name">Остров</div><div class="logo-sub">Система мониторинга</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-lbl">Навигация</div>
+    <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Обзор хозяйства</div>
+    <div class="nav-group open">
+      <div class="nav-group-hdr" onclick="this.parentElement.classList.toggle('open')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Участки
+        <svg class="nav-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="nav-children">
+        <div class="nav-child"><span class="nav-dot dot-ok"></span>Ардон</div>
+        <div class="nav-child"><span class="nav-dot dot-alarm"></span>Карджин</div>
+        <div class="nav-child"><span class="nav-dot dot-warn"></span>Дарг Кох</div>
+        <div class="nav-child"><span class="nav-dot dot-ok"></span>5 Озеро</div>
+      </div>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-lbl">События</div>
+    <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>Тревоги<span class="nav-badge">3</span></div>
+    <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Журнал событий</div>
+    <div class="nav-divider"></div>
+    <div class="nav-lbl">Управление</div>
+    <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>Отчёты</div>
+    <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Настройки</div>
+  </nav>
+  <div class="sidebar-footer"><div class="status-dot"></div><div class="status-txt">Система активна</div></div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <header class="topbar">
+    <button class="sidebar-toggle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="breadcrumb"><span class="bc-link">Обзор хозяйства</span><span class="bc-sep">›</span><span class="bc-cur">Настройки</span></div>
+    <div class="topbar-spacer"></div>
+    <span class="upd" id="updTimer">Обновлено 5 сек. назад</span>
+  </header>
+
+  <div class="settings-wrap">
+
+    <!-- TAB MENU -->
+    <div class="settings-tabs">
+      <div class="stab active" onclick="switchTab('users',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Пользователи
+      </div>
+      <div class="stab" onclick="switchTab('thresholds',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Пороговые значения
+      </div>
+      <div class="stab" onclick="switchTab('notifications',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Уведомления
+      </div>
+      <div class="stab" onclick="switchTab('profile',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+        Профиль
+      </div>
+    </div>
+
+    <!-- SETTINGS CONTENT -->
+    <div class="settings-content">
+
+      <!-- USERS TAB -->
+      <div id="tab-users">
+        <div class="section-hdr">
+          <div class="section-title">Пользователи системы</div>
+          <button class="btn btn-primary" onclick="showAddUser()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Добавить пользователя
+          </button>
+        </div>
+
+        <div class="card" style="padding:0">
+          <div class="utable-wrap">
+            <table class="utable">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Имя</th>
+                  <th>Логин</th>
+                  <th>Роль</th>
+                  <th>Участок</th>
+                  <th>Последний вход</th>
+                  <th>Статус</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><div class="avatar">ИА</div></td>
+                  <td><strong>Иванов А.И.</strong></td>
+                  <td style="color:var(--muted)">ivanov</td>
+                  <td><span class="role-pill role-duty">Дежурный</span></td>
+                  <td>Ардон</td>
+                  <td style="color:var(--muted)">06:09, сегодня</td>
+                  <td><span class="badge badge-ok">Активен</span></td>
+                  <td><div class="tbl-actions">
+                    <button class="icon-btn" title="Редактировать"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button class="icon-btn danger" title="Удалить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+                  </div></td>
+                </tr>
+                <tr>
+                  <td><div class="avatar">ПМ</div></td>
+                  <td><strong>Петров М.В.</strong></td>
+                  <td style="color:var(--muted)">petrov</td>
+                  <td><span class="role-pill role-admin">Администратор</span></td>
+                  <td>Все участки</td>
+                  <td style="color:var(--muted)">вчера, 22:14</td>
+                  <td><span class="badge badge-ok">Активен</span></td>
+                  <td><div class="tbl-actions">
+                    <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+                  </div></td>
+                </tr>
+                <tr>
+                  <td><div class="avatar">СК</div></td>
+                  <td><strong>Сидоров К.А.</strong></td>
+                  <td style="color:var(--muted)">sidorov</td>
+                  <td><span class="role-pill role-duty">Дежурный</span></td>
+                  <td>Карджин</td>
+                  <td style="color:var(--muted)">05:50, сегодня</td>
+                  <td><span class="badge badge-ok">Активен</span></td>
+                  <td><div class="tbl-actions">
+                    <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+                  </div></td>
+                </tr>
+                <tr>
+                  <td><div class="avatar" style="background:#f1f5f9;color:var(--muted)">НО</div></td>
+                  <td><strong style="color:var(--muted)">Новиков О.Г.</strong></td>
+                  <td style="color:var(--muted)">novikov</td>
+                  <td><span class="role-pill role-viewer">Наблюдатель</span></td>
+                  <td>Дарг Кох</td>
+                  <td style="color:var(--muted)">3 дня назад</td>
+                  <td><span class="badge" style="background:#f1f5f9;color:var(--muted)">Неактивен</span></td>
+                  <td><div class="tbl-actions">
+                    <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+                  </div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ADD USER FORM -->
+        <div id="addUserForm" style="display:none">
+          <div class="card">
+            <div class="card-title">Новый пользователь</div>
+            <div class="card-sub">Заполните данные учётной записи</div>
+            <div class="f-row">
+              <div class="f-group"><div class="f-label">Фамилия Имя Отчество</div><input type="text" placeholder="Иванов Алексей Иванович"></div>
+              <div class="f-group"><div class="f-label">Логин</div><input type="text" placeholder="ivanov_a"></div>
+            </div>
+            <div class="f-row">
+              <div class="f-group"><div class="f-label">Пароль</div><input type="password" placeholder="Минимум 8 символов"></div>
+              <div class="f-group"><div class="f-label">Роль</div><select><option>Дежурный</option><option>Администратор</option><option>Наблюдатель</option></select></div>
+            </div>
+            <div class="f-row">
+              <div class="f-group"><div class="f-label">Email</div><input type="email" placeholder="ivanov@ostrov.ru"></div>
+              <div class="f-group"><div class="f-label">Телефон (для SMS)</div><input type="text" placeholder="+7 900 000-00-00"></div>
+            </div>
+            <div class="f-row">
+              <div class="f-group full"><div class="f-label">Доступ к участкам</div><select><option>Все участки</option><option>Ардон</option><option>Карджин</option><option>Дарг Кох</option><option>5 Озеро</option></select></div>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-outline" onclick="hideAddUser()">Отмена</button>
+              <button class="btn btn-primary">Создать пользователя</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THRESHOLDS TAB -->
+      <div id="tab-thresholds" style="display:none">
+        <div class="section-hdr">
+          <div class="section-title">Пороговые значения параметров</div>
+          <button class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Сохранить изменения
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Параметры воды</div>
+          <div class="card-sub">Warning — предупреждение, Alarm — критическая тревога. Применяется ко всем бассейнам участка по умолчанию.</div>
+          <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+            <table class="thresh-table">
+              <thead>
+                <tr>
+                  <th>Параметр</th>
+                  <th>Участок</th>
+                  <th class="level-warn">Warning мин.</th>
+                  <th class="level-warn">Warning макс.</th>
+                  <th class="level-alarm">Alarm мин.</th>
+                  <th class="level-alarm">Alarm макс.</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><span class="param-name">O₂</span><span class="param-unit">мг/л</span></td><td style="color:var(--muted)">Все</td><td><input class="thresh-input" type="number" value="7.5"></td><td><input class="thresh-input" type="number" value="—" disabled style="color:var(--faint)"></td><td><input class="thresh-input" type="number" value="6.0"></td><td><input class="thresh-input" type="number" value="—" disabled style="color:var(--faint)"></td></tr>
+                <tr><td><span class="param-name">Температура</span><span class="param-unit">°C</span></td><td style="color:var(--muted)">Все</td><td><input class="thresh-input" type="number" value="6.0"></td><td><input class="thresh-input" type="number" value="12.0"></td><td><input class="thresh-input" type="number" value="4.0"></td><td><input class="thresh-input" type="number" value="15.0"></td></tr>
+                <tr><td><span class="param-name">pH</span></td><td style="color:var(--muted)">Все</td><td><input class="thresh-input" type="number" value="6.5"></td><td><input class="thresh-input" type="number" value="7.5"></td><td><input class="thresh-input" type="number" value="6.0"></td><td><input class="thresh-input" type="number" value="8.0"></td></tr>
+                <tr><td><span class="param-name">NH4</span><span class="param-unit">мг/л</span></td><td style="color:var(--muted)">Все</td><td><input class="thresh-input" type="number" value="0.8"></td><td><input class="thresh-input" type="number" value="—" disabled style="color:var(--faint)"></td><td><input class="thresh-input" type="number" value="1.5"></td><td><input class="thresh-input" type="number" value="—" disabled style="color:var(--faint)"></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Задержка перед тревогой</div>
+          <div class="card-sub">Время (в секундах) в течение которого значение должно оставаться за порогом, прежде чем создастся событие</div>
+          <div class="f-row">
+            <div class="f-group"><div class="f-label">Warning — задержка, сек</div><input type="number" value="30"></div>
+            <div class="f-group"><div class="f-label">Alarm — задержка, сек</div><input type="number" value="10"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS TAB -->
+      <div id="tab-notifications" style="display:none">
+        <div class="section-hdr">
+          <div class="section-title">Каналы уведомлений</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Способ оповещения</div>
+          <div class="card-sub">Выберите активные каналы доставки уведомлений</div>
+          <div class="channel-grid">
+            <div class="channel-card active" onclick="toggleChannel(this)">
+              <div class="channel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+              <div class="channel-name">Telegram</div>
+              <div class="channel-status">Подключён</div>
+            </div>
+            <div class="channel-card active" onclick="toggleChannel(this)">
+              <div class="channel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+              <div class="channel-name">SMS</div>
+              <div class="channel-status">Подключён</div>
+            </div>
+            <div class="channel-card" onclick="toggleChannel(this)">
+              <div class="channel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+              <div class="channel-name">E-mail</div>
+              <div class="channel-status">Не настроен</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Правила отправки</div>
+          <div class="card-sub">Настройте при каких событиях отправлять уведомления</div>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="toggle-name">Alarm — критическая тревога</div><div class="toggle-desc">Мгновенное уведомление при выходе за критический порог</div></div>
+            <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="toggle-name">Warning — предупреждение</div><div class="toggle-desc">Уведомление при превышении предупредительного порога</div></div>
+            <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="toggle-name">Service — сервисные события</div><div class="toggle-desc">Потеря связи с датчиком, технические ошибки</div></div>
+            <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="toggle-name">Восстановление</div><div class="toggle-desc">Уведомление при возврате параметра в норму</div></div>
+            <label class="toggle"><input type="checkbox"><div class="toggle-track"></div></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="toggle-name">Ночное время (22:00–07:00)</div><div class="toggle-desc">Отправлять только Alarm в ночное время</div></div>
+            <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Telegram Bot</div>
+          <div class="card-sub">Настройки подключения к боту</div>
+          <div class="f-row">
+            <div class="f-group"><div class="f-label">Bot Token</div><input type="text" value="7012345678:AAF_xxxxxxxxxxxxxxxxxxxxxxx"></div>
+            <div class="f-group"><div class="f-label">Chat ID / Group ID</div><input type="text" value="-100123456789"></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-outline">Отправить тест</button>
+            <button class="btn btn-primary">Сохранить</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE TAB -->
+      <div id="tab-profile" style="display:none">
+        <div class="section-hdr">
+          <div class="section-title">Мой профиль</div>
+        </div>
+
+        <div class="card">
+          <div class="profile-top">
+            <div class="profile-avatar">ИА</div>
+            <div>
+              <div class="profile-name">Иванов Алексей Иванович</div>
+              <div class="profile-role">Дежурный · Участок Ардон</div>
+            </div>
+          </div>
+          <div class="card-divider"></div>
+          <div class="f-row">
+            <div class="f-group"><div class="f-label">Фамилия Имя Отчество</div><input type="text" value="Иванов Алексей Иванович"></div>
+            <div class="f-group"><div class="f-label">Логин</div><input type="text" value="ivanov" disabled style="background:var(--bg);color:var(--muted)"></div>
+          </div>
+          <div class="f-row">
+            <div class="f-group"><div class="f-label">Email</div><input type="email" value="ivanov@ostrov.ru"></div>
+            <div class="f-group"><div class="f-label">Телефон</div><input type="text" value="+7 918 123-45-67"></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary">Сохранить изменения</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Смена пароля</div>
+          <div class="card-sub">Рекомендуем менять пароль не реже одного раза в 3 месяца</div>
+          <div class="f-row">
+            <div class="f-group full"><div class="f-label">Текущий пароль</div><input type="password" placeholder="••••••••"></div>
+          </div>
+          <div class="f-row">
+            <div class="f-group"><div class="f-label">Новый пароль</div><input type="password" placeholder="Минимум 8 символов"></div>
+            <div class="f-group"><div class="f-label">Повторите пароль</div><input type="password" placeholder="Повторите пароль"></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary">Изменить пароль</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Настройки интерфейса</div>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="toggle-name">Звуковое оповещение при тревоге</div><div class="toggle-desc">Воспроизводить звуковой сигнал при новом Alarm</div></div>
+            <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="toggle-name">Авто-обновление данных</div><div class="toggle-desc">Обновлять данные на экране каждые 30 секунд</div></div>
+            <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="toggle-name">Тёмная тема</div><div class="toggle-desc">Переключить интерфейс на тёмное оформление</div></div>
+            <label class="toggle"><input type="checkbox"><div class="toggle-track"></div></label>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /settings-content -->
+  </div><!-- /settings-wrap -->
+</main>
+
+<script>
+function switchTab(id, el) {
+  ['users','thresholds','notifications','profile'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===id ? '' : 'none';
+  });
+  document.querySelectorAll('.stab').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+}
+function showAddUser() {
+  document.getElementById('addUserForm').style.display = '';
+  document.getElementById('addUserForm').scrollIntoView({behavior:'smooth'});
+}
+function hideAddUser() { document.getElementById('addUserForm').style.display = 'none'; }
+function toggleChannel(el) {
+  el.classList.toggle('active');
+  const st = el.querySelector('.channel-status');
+  const ic = el.querySelector('.channel-icon');
+  if(el.classList.contains('active')) {
+    st.textContent = 'Подключён';
+    ic.style.background = 'var(--primary)';
+    ic.style.color = '#fff';
+  } else {
+    st.textContent = 'Отключён';
+    ic.style.background = 'var(--bg)';
+    ic.style.color = '';
+  }
+}
+let secs=5;
+setInterval(()=>{secs++;if(secs>60)secs=1;document.getElementById('updTimer').textContent='Обновлено '+secs+' сек. назад';},1000);
+</script>
+</body>
+</html>

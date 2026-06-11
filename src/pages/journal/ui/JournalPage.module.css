@@ -1,0 +1,502 @@
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Page header ──────────────────────────────────────────────────────────── */
+
+.pageHeader {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.pageTitle {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.pageSubtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.headerStats {
+  display: flex;
+  gap: 20px;
+  margin-left: auto;
+}
+
+.hstat {
+  text-align: center;
+}
+
+.hstatVal {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.hstatLbl {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.valAlarm {
+  color: var(--danger);
+}
+
+.valWarn {
+  color: var(--warning);
+}
+
+.valOk {
+  color: var(--success);
+}
+
+/* ── Filter bar ───────────────────────────────────────────────────────────── */
+
+.filterBar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+}
+
+.filterRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filterRow + .filterRow {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.fLbl {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.fDivider {
+  width: 1px;
+  height: 22px;
+  background: var(--border);
+}
+
+.fSpacer {
+  flex: 1;
+}
+
+/* ── Tab group ────────────────────────────────────────────────────────────── */
+
+.tabGroup {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.tabBtn {
+  padding: 5px 11px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tabBtn:hover {
+  background: #f8fafc;
+}
+
+.tabBtnActive {
+  background: var(--primary);
+  color: #fff;
+}
+
+.tc {
+  display: inline-block;
+  padding: 0 5px;
+  font-size: 10px;
+  border-radius: 8px;
+  margin-left: 3px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.tabBtn:not(.tabBtnActive) .tc {
+  background: #f1f5f9;
+  color: var(--muted);
+}
+
+/* ── Search ───────────────────────────────────────────────────────────────── */
+
+.searchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 8px;
+  color: var(--faint);
+  width: 13px;
+  height: 13px;
+  pointer-events: none;
+}
+
+.searchInput {
+  padding: 5px 10px 5px 28px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 12px;
+  width: 200px;
+  outline: none;
+  color: var(--text);
+  background: var(--surface);
+}
+
+.searchInput:focus {
+  border-color: var(--primary);
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+
+.btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 13px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.btnOutline {
+  background: var(--surface);
+  color: var(--muted);
+  border: 1.5px solid var(--border);
+}
+
+.btnOutline:hover {
+  border-color: #94a3b8;
+  color: var(--text);
+}
+
+/* ── Date presets ─────────────────────────────────────────────────────────── */
+
+.datePresets {
+  display: flex;
+  gap: 4px;
+}
+
+.preset {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.preset:hover {
+  background: #f8fafc;
+}
+
+.presetActive {
+  background: var(--primary-bg);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.customDates {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dateSep {
+  color: var(--faint);
+}
+
+.dateInput {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--surface);
+  cursor: pointer;
+  outline: none;
+}
+
+.dateInput:focus {
+  border-color: var(--primary);
+}
+
+/* ── Select ───────────────────────────────────────────────────────────────── */
+
+.select {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--surface);
+  cursor: pointer;
+  outline: none;
+}
+
+.select:focus {
+  border-color: var(--primary);
+}
+
+/* ── Table wrapper ────────────────────────────────────────────────────────── */
+
+.tableWrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* ── Journal table ────────────────────────────────────────────────────────── */
+
+.jtable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.jtable th {
+  background: #f8fafc;
+  padding: 9px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.jtable th:hover {
+  color: var(--text);
+}
+
+.jtable td {
+  padding: 9px 12px;
+  font-size: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.jtable tr:last-child td {
+  border-bottom: none;
+}
+
+.jtable tr:hover td {
+  background: #fafafa;
+}
+
+.rowNew td {
+  background: #fff7f7;
+}
+
+/* ── Sort arrows ──────────────────────────────────────────────────────────── */
+
+.sortArrow {
+  margin-left: 4px;
+  opacity: 0.4;
+}
+
+.sorted .sortArrow {
+  opacity: 1;
+  color: var(--primary);
+}
+
+.sortArrowActive {
+  opacity: 1;
+  color: var(--primary);
+}
+
+/* ── Type badge ───────────────────────────────────────────────────────────── */
+
+.typeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.typeAlarm {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid #fca5a5;
+}
+
+.typeWarn {
+  background: var(--warning-bg);
+  color: var(--warning);
+  border: 1px solid #fde047;
+}
+
+.typeService {
+  background: var(--blue-bg);
+  color: var(--primary);
+  border: 1px solid #c4b5fd;
+}
+
+.typeOk {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid #86efac;
+}
+
+/* ── Table cells ──────────────────────────────────────────────────────────── */
+
+.tdTime {
+  white-space: nowrap;
+}
+
+.dateStr {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.tdGroupBasin {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.groupName {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.basinName {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.tdSensor {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.tdMsg {
+  max-width: 200px;
+  font-size: 12px;
+}
+
+.valueCode {
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+}
+
+.statusAccepted {
+  color: var(--success);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.statusPending {
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.tdAcceptedBy {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.acceptedAt {
+  color: var(--faint);
+}
+
+/* ── Table footer ─────────────────────────────────────────────────────────── */
+
+.tableFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.pageInfo {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.showMoreBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 18px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.showMoreBtn:hover {
+  border-color: #94a3b8;
+  color: var(--text);
+}
+
+/* ── Empty state ──────────────────────────────────────────────────────────── */
+
+.emptyState {
+  padding: 48px;
+  text-align: center;
+  color: var(--muted);
+}

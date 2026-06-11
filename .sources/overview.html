@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Остров — Мониторинг</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; font-size: 14px; }
+
+:root {
+  --bg:          #f4f6f9;
+  --surface:     #ffffff;
+  --surface-2:   #f9fafb;
+  --surface-3:   #f1f4f8;
+  --border:      #e2e7ef;
+  --border-2:    #d0d7e3;
+  --text:        #1a2332;
+  --text-muted:  #5a6a7e;
+  --text-faint:  #9aa5b4;
+  --primary:     #2563eb;
+  --primary-bg:  #eff4ff;
+  --success:     #16a34a;
+  --success-bg:  #f0fdf4;
+  --warning:     #d97706;
+  --warning-bg:  #fffbeb;
+  --danger:      #dc2626;
+  --danger-bg:   #fef2f2;
+  --blue-bg:     #eff6ff;
+  --sidebar-w:   228px;
+  --topbar-h:    54px;
+  --radius:      10px;
+  --radius-sm:   6px;
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:   0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+}
+
+body {
+  font-family: -apple-system, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ══ SIDEBAR ══ */
+.sidebar {
+  width: var(--sidebar-w);
+  min-height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0;
+  z-index: 200;
+  transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), width 0.25s cubic-bezier(0.16,1,0.3,1);
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 52px;
+}
+
+.sidebar-logo {
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--topbar-h);
+  flex-shrink: 0;
+}
+
+.logo-icon {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(37,99,235,0.35);
+}
+.logo-icon svg { width: 16px; height: 16px; }
+
+.logo-text { white-space: nowrap; overflow: hidden; transition: opacity 0.2s; }
+.sidebar.collapsed .logo-text { opacity: 0; width: 0; }
+.logo-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.logo-sub { font-size: 10px; color: var(--text-faint); }
+
+.sidebar-nav { padding: 8px 6px; flex: 1; overflow-y: auto; overflow-x: hidden; }
+
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 10px 8px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 0.2s;
+}
+.sidebar.collapsed .nav-section-label { opacity: 0; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: all 0.15s;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  user-select: none;
+}
+.nav-item:hover { background: var(--surface-3); color: var(--text); }
+.nav-item.active { background: var(--primary-bg); color: var(--primary); }
+.nav-item.active .nav-icon { color: var(--primary); }
+
+.nav-icon { width: 16px; height: 16px; flex-shrink: 0; }
+.nav-label { transition: opacity 0.2s; }
+.sidebar.collapsed .nav-label { opacity: 0; }
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--danger);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 5px;
+  border-radius: 10px;
+  min-width: 18px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+  transition: opacity 0.2s;
+}
+.sidebar.collapsed .nav-badge { opacity: 0; }
+
+.nav-divider { height: 1px; background: var(--border); margin: 5px 8px; }
+
+/* Группы участков */
+.nav-group-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: all 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  user-select: none;
+}
+.nav-group-header:hover { background: var(--surface-3); color: var(--text); }
+.nav-chevron { margin-left: auto; transition: transform 0.2s; flex-shrink: 0; }
+.nav-group.open .nav-chevron { transform: rotate(90deg); }
+.sidebar.collapsed .nav-chevron { opacity: 0; }
+
+.nav-group-children {
+  display: none;
+  padding-left: 24px;
+}
+.nav-group.open .nav-group-children { display: block; }
+.sidebar.collapsed .nav-group-children { display: none !important; }
+
+.nav-child {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 12px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.nav-child:hover { background: var(--surface-3); color: var(--text); }
+.nav-child.active { color: var(--primary); background: var(--primary-bg); }
+
+.nav-child-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot-ok { background: var(--success); }
+.dot-warn { background: var(--warning); }
+.dot-alarm { background: var(--danger); }
+
+/* Tooltip для collapsed sidebar */
+.nav-item, .nav-group-header {
+  position: relative;
+}
+
+/* Toggle button */
+.sidebar-toggle {
+  position: fixed;
+  top: 13px;
+  left: calc(var(--sidebar-w) - 13px);
+  z-index: 300;
+  width: 26px; height: 26px;
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: left 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.15s;
+  box-shadow: var(--shadow-sm);
+}
+.sidebar-toggle:hover { box-shadow: var(--shadow-md); }
+.sidebar-toggle svg { width: 12px; height: 12px; color: var(--text-muted); transition: transform 0.25s; }
+body.sidebar-collapsed .sidebar-toggle { left: 39px; }
+body.sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
+
+.sidebar-footer {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 5px rgba(22,163,74,0.5);
+  flex-shrink: 0;
+}
+.status-text { font-size: 11px; color: var(--text-faint); white-space: nowrap; transition: opacity 0.2s; }
+.sidebar.collapsed .status-text { opacity: 0; }
+
+/* ══ MAIN ══ */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: margin-left 0.25s cubic-bezier(0.16,1,0.3,1);
+}
+body.sidebar-collapsed .main { margin-left: 52px; }
+
+/* ══ TOPBAR ══ */
+.topbar {
+  height: var(--topbar-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 0 var(--border);
+}
+
+.topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.topbar-breadcrumb { font-size: 11px; color: var(--text-faint); }
+.topbar-sep { color: var(--text-faint); font-size: 13px; }
+.topbar-spacer { flex: 1; }
+.topbar-updated { font-size: 11px; color: var(--text-faint); }
+
+.kpi-strip { display: flex; gap: 6px; }
+
+.kpi-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 12px 5px 8px;
+  cursor: default;
+  box-shadow: var(--shadow-sm);
+}
+
+.kpi-icon {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.kpi-icon.red    { background: var(--danger-bg); }
+.kpi-icon.amber  { background: var(--warning-bg); }
+.kpi-icon.green  { background: var(--success-bg); }
+.kpi-icon.blue   { background: var(--blue-bg); }
+.kpi-icon svg    { width: 14px; height: 14px; }
+
+.kpi-val { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+.kpi-val.red   { color: var(--danger); }
+.kpi-val.amber { color: var(--warning); }
+.kpi-val.green { color: var(--success); }
+.kpi-val.blue  { color: var(--primary); }
+.kpi-val.lime  { color: #65a30d; }
+
+.kpi-lbl { font-size: 10px; color: var(--text-faint); line-height: 1.2; white-space: nowrap; }
+
+/* ══ CONTENT ══ */
+.content { padding: 20px; flex: 1; }
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.section-title { font-size: 11px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.07em; }
+.section-meta { font-size: 11px; color: var(--text-faint); }
+
+/* ══ УЧАСТКИ ══ */
+.sites-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.site-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.18s;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.site-card:hover {
+  border-color: #bfcfe8;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.site-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.site-card.ok::before    { background: var(--success); }
+.site-card.warn::before  { background: var(--warning); }
+.site-card.alarm::before { background: var(--danger); }
+
+.site-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.site-name { font-size: 13.5px; font-weight: 700; color: var(--text); }
+.site-meta-text { font-size: 10.5px; color: var(--text-faint); margin-top: 2px; }
+
+.status-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.badge-ok   { background: var(--success-bg); color: var(--success); border: 1px solid #bbf7d0; }
+.badge-warn { background: var(--warning-bg); color: var(--warning); border: 1px solid #fde68a; }
+.badge-alarm{ background: var(--danger-bg);  color: var(--danger);  border: 1px solid #fecaca; }
+
+.site-params {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.param {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 7px 9px;
+}
+.param-label { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+.param-value { font-size: 14px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; color: var(--text); }
+.param-value .unit { font-size: 10px; font-weight: 500; color: var(--text-muted); }
+.param-ok    .param-value { color: var(--success); }
+.param-warn  .param-value { color: var(--warning); }
+.param-alarm .param-value { color: var(--danger); }
+
+
+.site-equip {
+  display: none;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+  animation: fadeIn 0.2s ease;
+}
+.site-equip.open { display: flex; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+.btn-equip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 3px 9px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 10px;
+  width: fit-content;
+}
+.btn-equip:hover { background: #e8edf5; color: var(--text); }
+.btn-equip svg { width: 11px; height: 11px; transition: transform 0.2s; }
+.btn-equip.open svg { transform: rotate(180deg); }
+
+
+.equip-chip {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 7px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.equip-chip svg { width: 10px; height: 10px; flex-shrink: 0; }
+.equip-chip.active-eq { color: var(--success); background: var(--success-bg); border-color: #bbf7d0; }
+.equip-chip.warn-eq   { color: var(--warning); background: var(--warning-bg); border-color: #fde68a; }
+
+.site-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.feeder-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.feeder-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+
+.event-counts { display: flex; gap: 4px; }
+.ev-chip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.ev-alarm { background: var(--danger-bg);  color: var(--danger); }
+.ev-warn  { background: var(--warning-bg); color: var(--warning); }
+.ev-svc   { background: var(--blue-bg);    color: var(--primary); }
+.ev-ok    { background: var(--surface-3);  color: var(--text-faint); }
+
+/* ══ EVENTS ══ */
+.events-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.events-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  background: var(--surface-2);
+}
+
+.events-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+  user-select: none;
+}
+.events-tab:hover { color: var(--text); }
+.events-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+.tab-count {
+  font-size: 10px; font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  height: 16px; line-height: 14px;
+}
+.tab-count.red   { background: var(--danger-bg);  color: var(--danger); }
+.tab-count.amber { background: var(--warning-bg); color: var(--warning); }
+.tab-count.blue  { background: var(--blue-bg);    color: var(--primary); }
+
+.events-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+}
+
+.btn-all {
+  font-size: 12px;
+  color: var(--primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-all:hover { opacity: 0.75; }
+
+.table-header {
+  display: grid;
+  grid-template-columns: 80px 130px 130px 1fr 100px 110px;
+  padding: 7px 16px;
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.event-row {
+  display: grid;
+  grid-template-columns: 80px 130px 130px 1fr 100px 110px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  transition: background 0.12s;
+}
+.event-row:last-child { border-bottom: none; }
+.event-row:hover { background: var(--surface-2); }
+
+.event-time     { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.event-location { font-size: 12px; color: var(--text-muted); }
+.event-sensor   { font-size: 12px; color: var(--text-muted); }
+.event-message  { font-size: 12.5px; color: var(--text); font-weight: 500; }
+
+.event-type {
+  font-size: 10px; font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+}
+.type-alarm   { background: var(--danger-bg);  color: var(--danger); }
+.type-warn    { background: var(--warning-bg); color: var(--warning); }
+.type-service { background: var(--blue-bg);    color: var(--primary); }
+
+.btn-accept {
+  font-size: 11px; font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-accept.act {
+  background: var(--primary-bg);
+  color: var(--primary);
+  border: 1px solid #bfdbfe;
+}
+.btn-accept.act:hover { background: #dbeafe; }
+.btn-accept.dis {
+  background: transparent;
+  color: var(--text-faint);
+  cursor: not-allowed;
+  border: 1px solid var(--border);
+  opacity: 0.6;
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Toggle button -->
+<button class="sidebar-toggle" onclick="toggleSidebar()" title="Свернуть меню">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+</button>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <div class="logo-name">Остров</div>
+      <div class="logo-sub">Мониторинг</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Навигация</div>
+
+    <div class="nav-item active">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="nav-label">Обзор хозяйства</span>
+    </div>
+
+    <!-- Участки в порядке: Ардон → Карджин → Дарг Кох → 5 Озеро -->
+    <div class="nav-group open" id="sitesGroup">
+      <div class="nav-group-header" onclick="toggleGroup('sitesGroup')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span class="nav-label">Участки</span>
+        <svg class="nav-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="nav-group-children">
+        <div class="nav-child" onclick="scrollToSite('ardon')">
+          <span class="nav-child-dot dot-ok"></span>
+          <span>Ардон</span>
+        </div>
+        <div class="nav-child" onclick="scrollToSite('kardzhin')">
+          <span class="nav-child-dot dot-alarm"></span>
+          <span>Карджин</span>
+        </div>
+        <div class="nav-child" onclick="scrollToSite('dargkoh')">
+          <span class="nav-child-dot dot-warn"></span>
+          <span>Дарг Кох</span>
+        </div>
+        <div class="nav-child" onclick="scrollToSite('ozero5')">
+          <span class="nav-child-dot dot-ok"></span>
+          <span>5 Озеро</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">События</div>
+
+    <div class="nav-item" onclick="switchTab('alarms', null, true)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span class="nav-label">Тревоги</span>
+      <span class="nav-badge">3</span>
+    </div>
+
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span class="nav-label">Журнал событий</span>
+    </div>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Управление</div>
+
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      <span class="nav-label">Отчёты</span>
+    </div>
+
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      <span class="nav-label">Общие настройки</span>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="status-dot"></div>
+    <div class="status-text">Система активна</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main" id="mainArea">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <span class="topbar-title">Обзор хозяйства</span>
+    <span class="topbar-spacer"></span>
+    <span class="topbar-updated" id="updTimer">Обновлено 8 сек. назад</span>
+
+    <div class="kpi-strip">
+      <div class="kpi-pill">
+        <div class="kpi-icon red">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div><div class="kpi-val red">3</div><div class="kpi-lbl">Аварий</div></div>
+      </div>
+      <div class="kpi-pill">
+        <div class="kpi-icon amber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div><div class="kpi-val amber">7</div><div class="kpi-lbl">Предупреждений</div></div>
+      </div>
+      <div class="kpi-pill">
+        <div class="kpi-icon green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div><div class="kpi-val green">142</div><div class="kpi-lbl">Датчиков онлайн</div></div>
+      </div>
+      <div class="kpi-pill">
+        <div class="kpi-icon blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        </div>
+        <div><div class="kpi-val blue">5</div><div class="kpi-lbl">Участков</div></div>
+      </div>
+      <div class="kpi-pill">
+        <div class="kpi-icon green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#65a30d" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div><div class="kpi-val lime">98.6%</div><div class="kpi-lbl">Доступность</div></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <div class="section-header">
+      <span class="section-title">Производственные участки</span>
+      <span class="section-meta">4 участка · 135 бассейнов</span>
+    </div>
+
+    <div class="sites-grid">
+
+      <!-- АРДОН -->
+      <div class="site-card ok" id="ardon">
+        <div class="site-card-header">
+          <div>
+            <div class="site-name">Участок Ардон</div>
+            <div class="site-meta-text">48 бассейнов · 3 группы</div>
+          </div>
+          <span class="status-badge badge-ok">Норма</span>
+        </div>
+        <div class="site-params">
+          <div class="param param-ok">
+            <div class="param-label">O₂ средн.</div>
+            <div class="param-value">9.1 <span class="unit">мг/л</span></div>
+          </div>
+          <div class="param">
+            <div class="param-label">Темп. ср.</div>
+            <div class="param-value">8.4 <span class="unit">°C</span></div>
+          </div>
+          <div class="param">
+            <div class="param-label">pH средн.</div>
+            <div class="param-value">7.2</div>
+          </div>
+          <div class="param param-ok">
+            <div class="param-label">NH4 средн.</div>
+            <div class="param-value">0.08 <span class="unit">мг/л</span></div>
+          </div>
+        </div>
+        <button class="btn-equip" onclick="toggleEquip('ardon')" id="btn-ardon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          Оборудование
+        </button>
+        <div class="site-equip" id="equip-ardon">
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+            Скв. №1–3
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v6M12 22v-6M4.93 4.93l4.24 4.24M14.83 14.83l4.24 4.24M2 12h6M22 12h-6M4.93 19.07l4.24-4.24M14.83 9.17l4.24-4.24"/></svg>
+            КТП 250/400 кВА
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+            ЛОС-1,2,3
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            О₂ ёмк. №1,2
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            ДГУ-1,2 (250 кВт)
+          </span>
+        </div>
+        <div class="site-card-footer">
+          <div class="feeder-info">
+            <div class="feeder-dot"></div>
+            12 кормушек вкл.
+          </div>
+          <div class="event-counts">
+            <span class="ev-chip ev-svc">2 сервис</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- КАРДЖИН -->
+      <div class="site-card alarm" id="kardzhin">
+        <div class="site-card-header">
+          <div>
+            <div class="site-name">Участок Карджин</div>
+            <div class="site-meta-text">36 бассейнов · 2 группы</div>
+          </div>
+          <span class="status-badge badge-alarm">Авария</span>
+        </div>
+        <div class="site-params">
+          <div class="param param-alarm">
+            <div class="param-label">O₂ средн.</div>
+            <div class="param-value">5.8 <span class="unit">мг/л</span></div>
+          </div>
+          <div class="param">
+            <div class="param-label">Темп. ср.</div>
+            <div class="param-value">8.7 <span class="unit">°C</span></div>
+          </div>
+          <div class="param param-warn">
+            <div class="param-label">pH средн.</div>
+            <div class="param-value">6.1</div>
+          </div>
+          <div class="param param-warn">
+            <div class="param-label">NH4 средн.</div>
+            <div class="param-value">0.42 <span class="unit">мг/л</span></div>
+          </div>
+        </div>
+        <button class="btn-equip" onclick="toggleEquip('kardzhin')" id="btn-kardzhin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          Оборудование
+        </button>
+        <div class="site-equip" id="equip-kardzhin">
+          <span class="equip-chip warn-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+            Насос НС-03 авар.
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83"/></svg>
+            КТП 630/160 кВА
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+            Мехфильтры №1–3
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            О₂ ёмк. №1,2
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            ДГУ-1,2 (250 кВт)
+          </span>
+        </div>
+        <div class="site-card-footer">
+          <div class="feeder-info">
+            <div class="feeder-dot"></div>
+            8 кормушек вкл.
+          </div>
+          <div class="event-counts">
+            <span class="ev-chip ev-alarm">2 аварии</span>
+            <span class="ev-chip ev-warn">3 предупр.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ДАРГ КОХ -->
+      <div class="site-card warn" id="dargkoh">
+        <div class="site-card-header">
+          <div>
+            <div class="site-name">Участок Дарг Кох</div>
+            <div class="site-meta-text">24 бассейна · 2 группы</div>
+          </div>
+          <span class="status-badge badge-warn">Внимание</span>
+        </div>
+        <div class="site-params">
+          <div class="param param-ok">
+            <div class="param-label">O₂ средн.</div>
+            <div class="param-value">8.6 <span class="unit">мг/л</span></div>
+          </div>
+          <div class="param">
+            <div class="param-label">Темп. ср.</div>
+            <div class="param-value">8.2 <span class="unit">°C</span></div>
+          </div>
+          <div class="param">
+            <div class="param-label">pH средн.</div>
+            <div class="param-value">6.4</div>
+          </div>
+          <div class="param param-ok">
+            <div class="param-label">NH4 средн.</div>
+            <div class="param-value">0.11 <span class="unit">мг/л</span></div>
+          </div>
+        </div>
+        <button class="btn-equip" onclick="toggleEquip('dargkoh')" id="btn-dargkoh">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          Оборудование
+        </button>
+        <div class="site-equip" id="equip-dargkoh">
+          <span class="equip-chip warn-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+            Датчик T-07 нет связи
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
+            КТП 630 кВА
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+            ЛОС 6+3 мехфильтра
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            О₂ ёмк. №1,2
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            ДГУ 250 кВт
+          </span>
+        </div>
+        <div class="site-card-footer">
+          <div class="feeder-info">
+            <div class="feeder-dot"></div>
+            6 кормушек вкл.
+          </div>
+          <div class="event-counts">
+            <span class="ev-chip ev-warn">1 предупр.</span>
+            <span class="ev-chip ev-svc">1 сервис</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 ОЗЕРО -->
+      <div class="site-card ok" id="ozero5">
+        <div class="site-card-header">
+          <div>
+            <div class="site-name">Участок 5 Озеро</div>
+            <div class="site-meta-text">27 бассейнов · 1 группа</div>
+          </div>
+          <span class="status-badge badge-ok">Норма</span>
+        </div>
+        <div class="site-params">
+          <div class="param param-ok">
+            <div class="param-label">O₂ средн.</div>
+            <div class="param-value">9.4 <span class="unit">мг/л</span></div>
+          </div>
+          <div class="param">
+            <div class="param-label">Темп. ср.</div>
+            <div class="param-value">8.1 <span class="unit">°C</span></div>
+          </div>
+          <div class="param">
+            <div class="param-label">pH средн.</div>
+            <div class="param-value">7.0</div>
+          </div>
+          <div class="param param-ok">
+            <div class="param-label">NH4 средн.</div>
+            <div class="param-value">0.06 <span class="unit">мг/л</span></div>
+          </div>
+        </div>
+        <button class="btn-equip" onclick="toggleEquip('ozero5')" id="btn-ozero5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          Оборудование
+        </button>
+        <div class="site-equip" id="equip-ozero5">
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4"/></svg>
+            Скв. №4,5
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
+            КТП 630 кВА
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+            ЛОС-4 (8 фильтров)
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            О₂ ёмк. №1,2
+          </span>
+          <span class="equip-chip active-eq">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            ДГУ 400 кВт
+          </span>
+        </div>
+        <div class="site-card-footer">
+          <div class="feeder-info">
+            <div class="feeder-dot"></div>
+            8 кормушек вкл.
+          </div>
+          <div class="event-counts">
+            <span class="ev-chip ev-ok">Всё в норме</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /sites-grid -->
+
+    <!-- АКТИВНЫЕ СОБЫТИЯ -->
+    <div class="events-block">
+      <div class="events-tabs">
+        <div class="events-tab active" id="tabAlarms" onclick="switchTab('alarms', this)">
+          Аварии <span class="tab-count red">3</span>
+        </div>
+        <div class="events-tab" id="tabWarnings" onclick="switchTab('warnings', this)">
+          Предупреждения <span class="tab-count amber">7</span>
+        </div>
+        <div class="events-tab" id="tabService" onclick="switchTab('service', this)">
+          Сервис <span class="tab-count blue">4</span>
+        </div>
+      </div>
+
+      <div class="events-header-row">
+        <span class="section-title">Активные события</span>
+        <div class="btn-all">Все события →</div>
+      </div>
+
+      <!-- АВАРИИ -->
+      <div class="tab-content active" id="tab-alarms">
+        <div class="table-header">
+          <div>Время</div><div>Участок · Группа</div><div>Оборудование</div>
+          <div>Сообщение</div><div>Тип</div><div>Действие</div>
+        </div>
+        <div class="event-row">
+          <div class="event-time">14:32</div>
+          <div class="event-location">Карджин · КГ-2</div>
+          <div class="event-sensor">Датчик O₂-Б12</div>
+          <div class="event-message">Критически низкий O₂ — бассейн Б-12</div>
+          <div><span class="event-type type-alarm">Авария</span></div>
+          <div><button class="btn-accept dis">Принять</button></div>
+        </div>
+        <div class="event-row">
+          <div class="event-time">14:29</div>
+          <div class="event-location">Карджин · КГ-1</div>
+          <div class="event-sensor">Насос НС-03</div>
+          <div class="event-message">Насос НС-03 — авария подачи воды</div>
+          <div><span class="event-type type-alarm">Авария</span></div>
+          <div><button class="btn-accept dis">Принять</button></div>
+        </div>
+        <div class="event-row">
+          <div class="event-time">14:21</div>
+          <div class="event-location">Дарг Кох · ДК-1</div>
+          <div class="event-sensor">Датчик T-07</div>
+          <div class="event-message">Нет связи с датчиком температуры T-07</div>
+          <div><span class="event-type type-alarm">Авария</span></div>
+          <div><button class="btn-accept dis">Принять</button></div>
+        </div>
+      </div>
+
+      <!-- ПРЕДУПРЕЖДЕНИЯ -->
+      <div class="tab-content" id="tab-warnings">
+        <div class="table-header">
+          <div>Время</div><div>Участок · Группа</div><div>Оборудование</div>
+          <div>Сообщение</div><div>Тип</div><div>Действие</div>
+        </div>
+        <div class="event-row">
+          <div class="event-time">14:45</div>
+          <div class="event-location">Карджин · КГ-2</div>
+          <div class="event-sensor">Датчик pH-08</div>
+          <div class="event-message">pH ниже нормы — бассейн Б-08</div>
+          <div><span class="event-type type-warn">Предупр.</span></div>
+          <div><button class="btn-accept act">Принять</button></div>
+        </div>
+        <div class="event-row">
+          <div class="event-time">14:38</div>
+          <div class="event-location">Дарг Кох · ДК-2</div>
+          <div class="event-sensor">Датчик O₂-04</div>
+          <div class="event-message">O₂ приближается к нижнему порогу</div>
+          <div><span class="event-type type-warn">Предупр.</span></div>
+          <div><button class="btn-accept act">Принять</button></div>
+        </div>
+        <div class="event-row">
+          <div class="event-time">14:15</div>
+          <div class="event-location">Карджин · КГ-1</div>
+          <div class="event-sensor">Датчик NH4-02</div>
+          <div class="event-message">NH4 превышает допустимое значение</div>
+          <div><span class="event-type type-warn">Предупр.</span></div>
+          <div><button class="btn-accept act">Принять</button></div>
+        </div>
+        <div class="event-row">
+          <div class="event-time">13:55</div>
+          <div class="event-location">Ардон · КГ-3</div>
+          <div class="event-sensor">Скважина №1</div>
+          <div class="event-message">Снижение расхода воды — Скв. №1 (ПЧ ONI)</div>
+          <div><span class="event-type type-warn">Предупр.</span></div>
+          <div><button class="btn-accept act">Принять</button></div>
+        </div>
+      </div>
+
+      <!-- СЕРВИС -->
+      <div class="tab-content" id="tab-service">
+        <div class="table-header">
+          <div>Время</div><div>Участок · Группа</div><div>Оборудование</div>
+          <div>Сообщение</div><div>Тип</div><div>Действие</div>
+        </div>
+        <div class="event-row">
+          <div class="event-time">13:50</div>
+          <div class="event-location">Ардон · КГ-1</div>
+          <div class="event-sensor">Кормушка FEED-03</div>
+          <div class="event-message">Кормушка FEED-03 требует обслуживания</div>
+          <div><span class="event-type type-service">Сервис</span></div>
+          <div><button class="btn-accept dis">Принять</button></div>
+        </div>
+        <div class="event-row">
+          <div class="event-time">13:22</div>
+          <div class="event-location">Ардон · КГ-2</div>
+          <div class="event-sensor">ЛОС-2 Мехфильтр №3</div>
+          <div class="event-message">Плановое ТО мехфильтра — давление в норме</div>
+          <div><span class="event-type type-service">Сервис</span></div>
+          <div><button class="btn-accept dis">Принять</button></div>
+        </div>
+        <div class="event-row">
+          <div class="event-time">12:10</div>
+          <div class="event-location">5 Озеро</div>
+          <div class="event-sensor">КНС старая</div>
+          <div class="event-message">Плановое ТО насоса КНС (ESQ-600)</div>
+          <div><span class="event-type type-service">Сервис</span></div>
+          <div><button class="btn-accept dis">Принять</button></div>
+        </div>
+      </div>
+
+    </div><!-- /events-block -->
+
+  </div><!-- /content -->
+</main>
+
+<script>
+
+function toggleEquip(id) {
+  const eq = document.getElementById('equip-' + id);
+  const btn = document.getElementById('btn-' + id);
+  eq.classList.toggle('open');
+  btn.classList.toggle('open');
+  btn.querySelector('span') && (btn.querySelector('span').textContent = eq.classList.contains('open') ? 'Скрыть' : 'Оборудование');
+}
+
+function toggleSidebar() {
+  document.body.classList.toggle('sidebar-collapsed');
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+function toggleGroup(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+function switchTab(name, el, scrollTo) {
+  document.querySelectorAll('.events-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (el) {
+    el.classList.add('active');
+  } else {
+    const map = { alarms: 'tabAlarms', warnings: 'tabWarnings', service: 'tabService' };
+    document.getElementById(map[name]).classList.add('active');
+  }
+  if (scrollTo) {
+    document.querySelector('.events-block').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function scrollToSite(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Highlight briefly
+  el.style.outline = '2px solid #2563eb';
+  el.style.outlineOffset = '3px';
+  setTimeout(() => { el.style.outline = ''; el.style.outlineOffset = ''; }, 1500);
+}
+
+// Timer
+let secs = 8;
+const timer = document.getElementById('updTimer');
+setInterval(() => {
+  secs++;
+  if (secs > 30) secs = 1;
+  timer.textContent = 'Обновлено ' + secs + ' сек. назад';
+}, 1000);
+</script>
+</body>
+</html>

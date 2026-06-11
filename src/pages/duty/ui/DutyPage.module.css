@@ -1,0 +1,554 @@
+/* -----------------------------------------------------------------------
+   DutyPage — Дашборд дежурного / Моя смена
+   ----------------------------------------------------------------------- */
+
+/* Shift indicator (topbar right slot) */
+.shiftInfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+.shiftDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* -----------------------------------------------------------------------
+   Page content area
+   ----------------------------------------------------------------------- */
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* -----------------------------------------------------------------------
+   Greeting / shift summary card
+   ----------------------------------------------------------------------- */
+
+.greetingCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.greetingLeft h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.greetingLeft p {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.greetingStats {
+  display: flex;
+  gap: 20px;
+}
+
+.gstat {
+  text-align: center;
+}
+
+.gstatVal {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.gstatLbl {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.gstatAlarm .gstatVal {
+  color: var(--danger);
+}
+
+.gstatWarn .gstatVal {
+  color: #d97706;
+}
+
+.gstatValBlue {
+  color: var(--primary);
+}
+
+/* -----------------------------------------------------------------------
+   Top row: events (span 2) + quick actions (span 1)
+   ----------------------------------------------------------------------- */
+
+.topRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+
+/* -----------------------------------------------------------------------
+   Generic card
+   ----------------------------------------------------------------------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.cardSpan2 {
+  grid-column: span 2;
+}
+
+/* -----------------------------------------------------------------------
+   Section header
+   ----------------------------------------------------------------------- */
+
+.sectionHdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sectionTitle svg {
+  width: 15px;
+  height: 15px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.sectionLink {
+  font-size: 12px;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.sectionLink:hover {
+  text-decoration: underline;
+}
+
+/* -----------------------------------------------------------------------
+   Event list
+   ----------------------------------------------------------------------- */
+
+.eventList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eventItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  transition: opacity 0.2s;
+}
+
+.eventAlarm {
+  border-color: var(--alarm-border, #fca5a5);
+  background: var(--alarm-bg, #fee2e2);
+}
+
+.eventWarn {
+  border-color: var(--warn-border, #fde047);
+  background: var(--warn-bg, #fef9c3);
+}
+
+.eventDimmed {
+  opacity: 0.55;
+}
+
+.eventIcon {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.eventIconAlarm {
+  background: var(--danger);
+}
+
+.eventIconWarn {
+  background: #f59e0b;
+}
+
+.eventBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.eventMsg {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.eventMeta {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.eventTime {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.eventActions {
+  display: flex;
+  gap: 6px;
+  margin-top: 7px;
+}
+
+.btnSm {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btnSm:disabled {
+  cursor: default;
+}
+
+.btnAccept {
+  background: var(--success);
+  color: #fff;
+}
+
+.btnAccept:not(:disabled):hover {
+  background: #15803d;
+}
+
+.btnDetail {
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.btnDetail:hover {
+  color: var(--text);
+}
+
+/* -----------------------------------------------------------------------
+   Quick actions grid
+   ----------------------------------------------------------------------- */
+
+.quickGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.qaBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface);
+  transition: all 0.15s;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.qaBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-bg, #e0f2fe);
+}
+
+.qaBtn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.qaBtnAlert {
+  border-color: var(--alarm-border, #fca5a5);
+  color: var(--danger);
+  background: var(--alarm-bg, #fee2e2);
+}
+
+.qaBtnAlert:hover {
+  background: #fecaca;
+}
+
+/* -----------------------------------------------------------------------
+   Shift interval progress bar
+   ----------------------------------------------------------------------- */
+
+.shiftInterval {
+  margin-top: 12px;
+  padding: 10px;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.shiftIntervalLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.o2BarBg {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.o2BarFill {
+  height: 100%;
+  width: 73%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--primary), #7dd3fc);
+  transition: width 0.5s;
+}
+
+.o2Label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--faint);
+  margin-top: 2px;
+}
+
+.o2LabelCenter {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* -----------------------------------------------------------------------
+   Bottom row: basins + timeline
+   ----------------------------------------------------------------------- */
+
+.bottomRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* -----------------------------------------------------------------------
+   Basin grid / cards
+   ----------------------------------------------------------------------- */
+
+.basinGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.basinCard {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--bg);
+}
+
+.basinCard:hover {
+  border-color: var(--primary);
+  background: var(--primary-bg, #e0f2fe);
+}
+
+.basinAlarm {
+  border-color: var(--alarm-border, #fca5a5);
+  background: var(--alarm-bg, #fee2e2);
+}
+
+.basinWarn {
+  border-color: var(--warn-border, #fde047);
+  background: var(--warn-bg, #fef9c3);
+}
+
+.basinTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.basinName {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.basinStatus {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+
+.statusAlarm {
+  background: var(--alarm-bg, #fee2e2);
+  color: var(--danger);
+}
+
+.statusWarn {
+  background: var(--warn-bg, #fef9c3);
+  color: var(--warning);
+}
+
+.basinParams {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.bparam {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Value colour helpers */
+.colorAlarm {
+  color: var(--danger);
+}
+
+.colorWarn {
+  color: var(--warning);
+}
+
+.colorOk {
+  color: var(--success);
+}
+
+.colorMuted {
+  color: var(--muted);
+}
+
+/* -----------------------------------------------------------------------
+   Timeline
+   ----------------------------------------------------------------------- */
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.tlItem {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  position: relative;
+}
+
+.tlItem:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 28px;
+  bottom: 0;
+  width: 1px;
+  background: var(--border);
+}
+
+.tlDot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.tlDotAlarm {
+  background: var(--danger);
+  color: #fff;
+}
+
+.tlDotWarn {
+  background: #f59e0b;
+  color: #fff;
+}
+
+.tlDotOk {
+  background: var(--success);
+  color: #fff;
+}
+
+.tlDotService {
+  background: #6366f1;
+  color: #fff;
+}
+
+.tlBody {
+  flex: 1;
+}
+
+.tlMsg {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tlMeta {
+  font-size: 11px;
+  color: var(--muted);
+}

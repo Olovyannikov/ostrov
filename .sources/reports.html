@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Отчёты — Остров</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f1f5f9;--surface:#fff;--border:#e2e8f0;--text:#1e293b;
+  --muted:#64748b;--faint:#94a3b8;
+  --primary:#0284c7;--primary-bg:#e0f2fe;--primary-hover:#0369a1;
+  --ok:#16a34a;--ok-bg:#dcfce7;
+  --warn:#b45309;--warn-bg:#fef9c3;
+  --alarm:#b91c1c;--alarm-bg:#fee2e2;
+  --radius:10px;--font:'Inter','Segoe UI',system-ui,sans-serif;
+}
+body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex;min-height:100vh;font-size:14px}
+
+/* SIDEBAR */
+.sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.logo-icon{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#0ea5e9,#0284c7);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-name{font-size:15px;font-weight:700}.logo-sub{font-size:10px;color:var(--muted)}
+.sidebar-nav{flex:1;overflow-y:auto;padding:10px 8px}
+.nav-lbl{font-size:10px;font-weight:600;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;padding:8px 8px 4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--muted)}
+.nav-item:hover{background:#f0f9ff;color:var(--primary)}
+.nav-item.active{background:#e0f2fe;color:var(--primary);font-weight:600}
+.nav-icon{width:16px;height:16px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px}
+.nav-group-hdr{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--muted)}
+.nav-group-hdr:hover{background:#f8fafc}
+.nav-chevron{margin-left:auto;transition:transform .2s}
+.nav-group.open .nav-chevron{transform:rotate(90deg)}
+.nav-children{display:none;padding-left:16px}
+.nav-group.open .nav-children{display:block}
+.nav-child{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:6px;font-size:12px;color:var(--muted);cursor:pointer}
+.nav-child:hover{background:#f8fafc}
+.nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-ok{background:var(--ok)}.dot-warn{background:#f59e0b}.dot-alarm{background:#ef4444}
+.nav-divider{height:1px;background:var(--border);margin:8px 0}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.status-txt{font-size:11px;color:var(--muted)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:48px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0}
+.sidebar-toggle{width:30px;height:30px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.sidebar-toggle:hover{background:#f1f5f9}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.bc-link{cursor:pointer;color:var(--primary)}.bc-sep{color:var(--faint)}.bc-cur{color:var(--text);font-weight:600}
+.topbar-spacer{flex:1}
+.upd{font-size:12px;color:var(--faint)}
+.content{flex:1;overflow-y:auto;padding:20px;display:flex;gap:16px}
+
+/* TWO-COLUMN LAYOUT */
+.col-left{width:340px;min-width:340px;display:flex;flex-direction:column;gap:14px}
+.col-right{flex:1;display:flex;flex-direction:column;gap:14px}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.card-title svg{width:15px;height:15px;color:var(--primary)}
+
+/* FORM ELEMENTS */
+.f-group{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.f-group:last-child{margin-bottom:0}
+.f-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+select,input[type=date]{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;color:var(--text);background:var(--surface);outline:none;cursor:pointer}
+select:focus,input[type=date]:focus{border-color:var(--primary)}
+
+/* CHECKBOXES */
+.check-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.check-item{display:flex;align-items:center;gap:7px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;transition:all .15s}
+.check-item:hover{border-color:var(--primary);background:var(--primary-bg)}
+.check-item.checked{border-color:var(--primary);background:var(--primary-bg);color:var(--primary);font-weight:600}
+.check-item input{display:none}
+.check-dot{width:14px;height:14px;border-radius:3px;border:1.5px solid var(--faint);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.check-item.checked .check-dot{background:var(--primary);border-color:var(--primary)}
+.check-item.checked .check-dot::after{content:'✓';font-size:9px;color:#fff;font-weight:700}
+
+/* SITE CHECKBOXES */
+.site-list{display:flex;flex-direction:column;gap:5px}
+.site-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;cursor:pointer;font-size:13px;transition:all .15s}
+.site-item:hover{border-color:var(--primary);background:var(--primary-bg)}
+.site-item.checked{border-color:var(--primary);background:var(--primary-bg)}
+.site-item input{display:none}
+.site-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--faint);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.site-item.checked .site-check{background:var(--primary);border-color:var(--primary)}
+.site-item.checked .site-check::after{content:'✓';font-size:10px;color:#fff;font-weight:700}
+
+/* REPORT TYPE SELECTOR */
+.report-types{display:flex;flex-direction:column;gap:6px}
+.rtype{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s}
+.rtype:hover{border-color:var(--primary);background:#f8fafc}
+.rtype.selected{border-color:var(--primary);background:var(--primary-bg)}
+.rtype-radio{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--faint);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.rtype.selected .rtype-radio{background:var(--primary);border-color:var(--primary)}
+.rtype.selected .rtype-radio::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+.rtype-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.rtype-desc{font-size:11px;color:var(--muted)}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-hover)}
+.btn-outline{background:var(--surface);color:var(--muted);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:#94a3b8;color:var(--text)}
+.btn-row{display:flex;gap:8px;margin-top:4px}
+.btn svg{width:14px;height:14px}
+.btn-lg{padding:10px 20px;font-size:14px;width:100%;justify-content:center}
+
+/* PREVIEW */
+.preview-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.preview-title{font-size:15px;font-weight:700}
+.preview-meta{font-size:11px;color:var(--muted)}
+.preview-actions{display:flex;gap:8px}
+
+/* SUMMARY CARDS */
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.scard{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center}
+.scard-val{font-size:20px;font-weight:800;color:var(--text)}
+.scard-lbl{font-size:10px;color:var(--muted);margin-top:2px}
+.scard.alarm .scard-val{color:var(--alarm)}
+.scard.warn .scard-val{color:var(--warn)}
+.scard.ok .scard-val{color:var(--ok)}
+
+/* DATA TABLE */
+.dtable-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px}
+.dtable{width:100%;border-collapse:collapse;font-size:12px}
+.dtable th{background:#f8fafc;padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);white-space:nowrap}
+.dtable td{padding:7px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.dtable tr:last-child td{border-bottom:none}
+.dtable tr:hover td{background:#fafafa}
+.val-ok{color:var(--ok);font-weight:600}
+.val-warn{color:var(--warn);font-weight:600}
+.val-alarm{color:var(--alarm);font-weight:700}
+.pill{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700}
+.pill-ok{background:var(--ok-bg);color:var(--ok)}
+.pill-warn{background:var(--warn-bg);color:var(--warn)}
+.pill-alarm{background:var(--alarm-bg);color:var(--alarm)}
+
+/* CHART PLACEHOLDER */
+.chart-area{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px}
+.chart-lbl{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+.mini-chart{height:80px;display:flex;align-items:flex-end;gap:3px;padding:0 4px}
+.bar{flex:1;border-radius:3px 3px 0 0;min-width:4px;transition:opacity .2s;cursor:pointer}
+.bar:hover{opacity:.7}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* EMPTY STATE */
+.empty-preview{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:48px;text-align:center;color:var(--muted);border:2px dashed var(--border);border-radius:var(--radius);background:var(--bg)}
+.empty-icon{width:48px;height:48px;color:var(--faint);margin-bottom:12px}
+.empty-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px}
+.empty-sub{font-size:13px;color:var(--muted);max-width:280px}
+
+/* GENERATING STATE */
+.generating{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:48px;gap:16px}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gen-txt{font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div><div class="logo-name">Остров</div><div class="logo-sub">Система мониторинга</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-lbl">Навигация</div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Обзор хозяйства
+    </div>
+    <div class="nav-group open">
+      <div class="nav-group-hdr" onclick="this.parentElement.classList.toggle('open')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Участки
+        <svg class="nav-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="nav-children">
+        <div class="nav-child"><span class="nav-dot dot-ok"></span>Ардон</div>
+        <div class="nav-child"><span class="nav-dot dot-alarm"></span>Карджин</div>
+        <div class="nav-child"><span class="nav-dot dot-warn"></span>Дарг Кох</div>
+        <div class="nav-child"><span class="nav-dot dot-ok"></span>5 Озеро</div>
+      </div>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-lbl">События</div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+      Тревоги<span class="nav-badge">3</span>
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Журнал событий
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-lbl">Управление</div>
+    <div class="nav-item active">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      Отчёты
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Настройки
+    </div>
+  </nav>
+  <div class="sidebar-footer"><div class="status-dot"></div><div class="status-txt">Система активна</div></div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <header class="topbar">
+    <button class="sidebar-toggle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="breadcrumb">
+      <span class="bc-link">Обзор хозяйства</span>
+      <span class="bc-sep">›</span>
+      <span class="bc-cur">Отчёты</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <span class="upd" id="updTimer">Обновлено 5 сек. назад</span>
+  </header>
+
+  <div class="content">
+
+    <!-- LEFT COLUMN: SETTINGS -->
+    <div class="col-left">
+
+      <!-- Report type -->
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Тип отчёта
+        </div>
+        <div class="report-types">
+          <div class="rtype selected" onclick="selectType(this)" data-type="summary">
+            <div class="rtype-radio"></div>
+            <div><div class="rtype-name">Сводный по хозяйству</div><div class="rtype-desc">Все участки, агрегированные показатели</div></div>
+          </div>
+          <div class="rtype" onclick="selectType(this)" data-type="site">
+            <div class="rtype-radio"></div>
+            <div><div class="rtype-name">По участку</div><div class="rtype-desc">Детальные данные одного участка</div></div>
+          </div>
+          <div class="rtype" onclick="selectType(this)" data-type="events">
+            <div class="rtype-radio"></div>
+            <div><div class="rtype-name">По событиям</div><div class="rtype-desc">Аварии и предупреждения за период</div></div>
+          </div>
+          <div class="rtype" onclick="selectType(this)" data-type="feed">
+            <div class="rtype-radio"></div>
+            <div><div class="rtype-name">По кормлению</div><div class="rtype-desc">Активность кормушек, расход корма</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Period -->
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Период
+        </div>
+        <div class="f-group">
+          <div class="f-label">Быстрый выбор</div>
+          <select id="periodPreset" onchange="applyPreset()">
+            <option value="today">Сегодня</option>
+            <option value="yesterday">Вчера</option>
+            <option value="7d" selected>Последние 7 дней</option>
+            <option value="30d">Последние 30 дней</option>
+            <option value="month">Текущий месяц</option>
+            <option value="custom">Произвольный период</option>
+          </select>
+        </div>
+        <div class="f-group">
+          <div class="f-label">С</div>
+          <input type="date" id="dateFrom" value="2026-06-04">
+        </div>
+        <div class="f-group">
+          <div class="f-label">По</div>
+          <input type="date" id="dateTo" value="2026-06-11">
+        </div>
+      </div>
+
+      <!-- Sites -->
+      <div class="card" id="sitesCard">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          Участки
+        </div>
+        <div class="site-list">
+          <div class="site-item checked" onclick="toggleSite(this)">
+            <div class="site-check"></div><span>Ардон</span>
+            <span style="margin-left:auto;font-size:11px;color:var(--muted)">48 бассейнов</span>
+          </div>
+          <div class="site-item checked" onclick="toggleSite(this)">
+            <div class="site-check"></div><span>Карджин</span>
+            <span style="margin-left:auto;font-size:11px;color:var(--muted)">36 бассейнов</span>
+          </div>
+          <div class="site-item checked" onclick="toggleSite(this)">
+            <div class="site-check"></div><span>Дарг Кох</span>
+            <span style="margin-left:auto;font-size:11px;color:var(--muted)">24 бассейна</span>
+          </div>
+          <div class="site-item checked" onclick="toggleSite(this)">
+            <div class="site-check"></div><span>5 Озеро</span>
+            <span style="margin-left:auto;font-size:11px;color:var(--muted)">27 бассейнов</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Parameters -->
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Параметры
+        </div>
+        <div class="check-grid">
+          <div class="check-item checked" onclick="toggleCheck(this)">
+            <div class="check-dot"></div>O₂ (мг/л)
+          </div>
+          <div class="check-item checked" onclick="toggleCheck(this)">
+            <div class="check-dot"></div>Температура
+          </div>
+          <div class="check-item checked" onclick="toggleCheck(this)">
+            <div class="check-dot"></div>pH
+          </div>
+          <div class="check-item" onclick="toggleCheck(this)">
+            <div class="check-dot"></div>NH4
+          </div>
+          <div class="check-item checked" onclick="toggleCheck(this)">
+            <div class="check-dot"></div>Аварии
+          </div>
+          <div class="check-item" onclick="toggleCheck(this)">
+            <div class="check-dot"></div>Кормушки
+          </div>
+        </div>
+      </div>
+
+      <!-- Generate button -->
+      <button class="btn btn-primary btn-lg" onclick="generateReport()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="5 12 12 5 19 12"/><polyline points="5 19 12 12 19 19"/></svg>
+        Сформировать отчёт
+      </button>
+
+    </div>
+
+    <!-- RIGHT COLUMN: PREVIEW -->
+    <div class="col-right" id="colRight">
+
+      <div class="empty-preview" id="emptyState">
+        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <div class="empty-title">Выберите параметры и сформируйте отчёт</div>
+        <div class="empty-sub">Настройте тип, период и участки слева, затем нажмите «Сформировать отчёт»</div>
+      </div>
+
+      <div id="generatingState" style="display:none;flex:1;flex-direction:column">
+        <div class="generating">
+          <div class="spinner"></div>
+          <div class="gen-txt">Формируем отчёт…</div>
+        </div>
+      </div>
+
+      <div id="reportState" style="display:none;flex-direction:column;gap:14px">
+
+        <!-- Header -->
+        <div class="card">
+          <div class="preview-header">
+            <div>
+              <div class="preview-title" id="reportTitle">Сводный отчёт по хозяйству</div>
+              <div class="preview-meta" id="reportMeta">04.06.2026 — 11.06.2026 · Все участки · 135 бассейнов</div>
+            </div>
+            <div class="preview-actions">
+              <button class="btn btn-outline" onclick="downloadCSV()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV
+              </button>
+              <button class="btn btn-outline" onclick="downloadExcel()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Excel
+              </button>
+              <button class="btn btn-primary" onclick="downloadPDF()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h6M9 17h6M9 9h1"/></svg>
+                Скачать PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary KPIs -->
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Сводные показатели за период
+          </div>
+          <div class="summary-grid">
+            <div class="scard"><div class="scard-val">8.6</div><div class="scard-lbl">O₂ ср. мг/л</div></div>
+            <div class="scard"><div class="scard-val">8.3</div><div class="scard-lbl">T°C ср.</div></div>
+            <div class="scard"><div class="scard-val">6.9</div><div class="scard-lbl">pH ср.</div></div>
+            <div class="scard alarm"><div class="scard-val">17</div><div class="scard-lbl">Аварий</div></div>
+          </div>
+
+          <!-- Mini charts -->
+          <div class="chart-row">
+            <div class="chart-area">
+              <div class="chart-lbl">O₂ по дням (мг/л)</div>
+              <div class="mini-chart" id="chartO2"></div>
+            </div>
+            <div class="chart-area">
+              <div class="chart-lbl">Аварии по дням</div>
+              <div class="mini-chart" id="chartAlarms"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            Детализация по участкам
+          </div>
+          <div class="dtable-wrap">
+            <table class="dtable">
+              <thead>
+                <tr>
+                  <th>Участок</th>
+                  <th>Бассейнов</th>
+                  <th>O₂ ср.</th>
+                  <th>O₂ мин.</th>
+                  <th>T°C ср.</th>
+                  <th>pH ср.</th>
+                  <th>Аварий</th>
+                  <th>Предупр.</th>
+                  <th>Статус</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Ардон</strong></td>
+                  <td>48</td>
+                  <td class="val-ok">9.1</td>
+                  <td class="val-ok">7.8</td>
+                  <td>8.4</td>
+                  <td>7.2</td>
+                  <td>2</td>
+                  <td>5</td>
+                  <td><span class="pill pill-ok">Норма</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Карджин</strong></td>
+                  <td>36</td>
+                  <td class="val-warn">5.8</td>
+                  <td class="val-alarm">4.9</td>
+                  <td>8.7</td>
+                  <td>6.1</td>
+                  <td>9</td>
+                  <td>11</td>
+                  <td><span class="pill pill-alarm">Аварии</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Дарг Кох</strong></td>
+                  <td>24</td>
+                  <td class="val-ok">8.6</td>
+                  <td class="val-warn">7.1</td>
+                  <td>8.2</td>
+                  <td>6.4</td>
+                  <td>4</td>
+                  <td>6</td>
+                  <td><span class="pill pill-warn">Внимание</span></td>
+                </tr>
+                <tr>
+                  <td><strong>5 Озеро</strong></td>
+                  <td>27</td>
+                  <td class="val-ok">9.4</td>
+                  <td class="val-ok">8.2</td>
+                  <td>8.1</td>
+                  <td>7.0</td>
+                  <td>2</td>
+                  <td>3</td>
+                  <td><span class="pill pill-ok">Норма</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// Mini charts
+const o2data  = [8.9,8.7,8.4,7.8,8.6,9.1,8.8];
+const almdata = [1,3,5,4,2,1,1];
+function drawChart(id, data, color, max) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.innerHTML = '';
+  data.forEach(v => {
+    const b = document.createElement('div');
+    b.className = 'bar';
+    b.style.height = (v/max*100)+'%';
+    b.style.background = color;
+    b.title = v;
+    el.appendChild(b);
+  });
+}
+drawChart('chartO2',    o2data,  '#0284c7', 12);
+drawChart('chartAlarms',almdata, '#ef4444', 6);
+
+function selectType(el) {
+  document.querySelectorAll('.rtype').forEach(r=>r.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function toggleSite(el) { el.classList.toggle('checked'); }
+function toggleCheck(el) { el.classList.toggle('checked'); }
+
+function applyPreset() {
+  const p = document.getElementById('periodPreset').value;
+  const today = new Date('2026-06-11');
+  const fmt = d => d.toISOString().slice(0,10);
+  const offsets = {today:0, yesterday:1, '7d':7, '30d':30, month:0};
+  const d2 = new Date(today);
+  const d1 = new Date(today);
+  if(p==='yesterday') { d1.setDate(d1.getDate()-1); d2.setDate(d2.getDate()-1); }
+  else if(p==='month') { d1.setDate(1); }
+  else if(offsets[p]) { d1.setDate(d1.getDate()-offsets[p]+1); }
+  document.getElementById('dateFrom').value = fmt(d1);
+  document.getElementById('dateTo').value   = fmt(d2);
+}
+
+function generateReport() {
+  document.getElementById('emptyState').style.display    = 'none';
+  document.getElementById('reportState').style.display   = 'none';
+  const gen = document.getElementById('generatingState');
+  gen.style.display = 'flex';
+  setTimeout(() => {
+    gen.style.display = 'none';
+    const rs = document.getElementById('reportState');
+    rs.style.display = 'flex';
+    drawChart('chartO2',    o2data,  '#0284c7', 12);
+    drawChart('chartAlarms',almdata, '#ef4444', 6);
+  }, 1600);
+}
+
+function downloadCSV() {
+  const csv = "Участок,Бассейнов,O2 ср,O2 мин,T ср,pH ср,Аварий,Предупр\nАрдон,48,9.1,7.8,8.4,7.2,2,5\nКарджин,36,5.8,4.9,8.7,6.1,9,11\nДарг Кох,24,8.6,7.1,8.2,6.4,4,6\n5 Озеро,27,9.4,8.2,8.1,7.0,2,3";
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='otchet_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+function downloadExcel() { alert('Генерация Excel — функция будет доступна в финальной версии'); }
+function downloadPDF()   { alert('Генерация PDF — функция будет доступна в финальной версии'); }
+
+let secs=5;
+setInterval(()=>{secs++;if(secs>60)secs=1;document.getElementById('updTimer').textContent='Обновлено '+secs+' сек. назад';},1000);
+</script>
+</body>
+</html>

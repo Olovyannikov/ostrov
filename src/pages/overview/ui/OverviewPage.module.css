@@ -1,0 +1,441 @@
+.title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* KPI strip in the topbar */
+.kpiStrip {
+  display: flex;
+  gap: 6px;
+}
+.kpiPill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 12px 4px 7px;
+  box-shadow: var(--shadow-sm);
+}
+.kpiIcon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.red {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+.amber {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+.green {
+  background: var(--success-bg);
+  color: var(--success);
+}
+.blue {
+  background: var(--blue-bg);
+  color: var(--primary);
+}
+.kpiVal {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.kpiVal.red {
+  color: var(--danger);
+  background: none;
+}
+.kpiVal.amber {
+  color: var(--warning);
+  background: none;
+}
+.kpiVal.green {
+  color: var(--success);
+  background: none;
+}
+.kpiVal.blue {
+  color: var(--primary);
+  background: none;
+}
+.kpiVal.lime {
+  color: #65a30d;
+}
+.kpiLbl {
+  font-size: 10px;
+  color: var(--faint);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.content {
+  padding: 20px;
+  flex: 1;
+}
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.sectionTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.sectionMeta {
+  font-size: 11px;
+  color: var(--faint);
+}
+
+/* sites grid */
+.sitesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+@media (max-width: 1100px) {
+  .sitesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.siteCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.18s;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.siteCard:hover {
+  border-color: #bfcfe8;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.siteCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+.siteCard.ok::before {
+  background: var(--success);
+}
+.siteCard.warn::before {
+  background: var(--warning);
+}
+.siteCard.alarm::before {
+  background: var(--danger);
+}
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.siteName {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.siteMeta {
+  font-size: 10.5px;
+  color: var(--faint);
+  margin-top: 2px;
+}
+.params {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.param {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 7px 9px;
+}
+.paramLabel {
+  font-size: 9px;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 3px;
+}
+.paramValue {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.paramValue .unit {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.param.ok .paramValue {
+  color: var(--success);
+}
+.param.warn .paramValue {
+  color: var(--warning);
+}
+.param.alarm .paramValue {
+  color: var(--danger);
+}
+.btnEquip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 3px 9px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 10px;
+  width: fit-content;
+}
+.btnEquip:hover {
+  background: #e8edf5;
+  color: var(--text);
+}
+.btnEquip svg {
+  transition: transform 0.2s;
+}
+.btnEquip.open svg {
+  transform: rotate(180deg);
+}
+.equip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+  animation: fadeIn 0.2s ease;
+}
+.chip {
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 7px;
+}
+.chip.active {
+  color: var(--success);
+  background: var(--success-bg);
+  border-color: #bbf7d0;
+}
+.chip.warn {
+  color: var(--warning);
+  background: var(--warning-bg);
+  border-color: #fde68a;
+}
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.feeder {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.feederDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+}
+.evChips {
+  display: flex;
+  gap: 4px;
+}
+.evChip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.evAlarm {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+.evWarn {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+.evService {
+  background: var(--blue-bg);
+  color: var(--primary);
+}
+.evOk {
+  background: var(--surface-3);
+  color: var(--faint);
+}
+
+/* events block */
+.events {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  background: var(--surface-2);
+}
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+  user-select: none;
+}
+.tab:hover {
+  color: var(--text);
+}
+.tabActive {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+.tabCount {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.tabCount.red {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+.tabCount.amber {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+.tabCount.blue {
+  background: var(--blue-bg);
+  color: var(--primary);
+}
+.eventsHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+}
+.tableHeader,
+.eventRow {
+  display: grid;
+  grid-template-columns: 70px 130px 130px 1fr 90px 100px;
+  align-items: center;
+}
+.tableHeader {
+  padding: 7px 16px;
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.eventRow {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+.eventRow:last-child {
+  border-bottom: none;
+}
+.eventRow:hover {
+  background: var(--surface-2);
+}
+.evTime {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.evCell {
+  font-size: 12px;
+  color: var(--muted);
+}
+.evMsg {
+  font-size: 12.5px;
+  color: var(--text);
+  font-weight: 500;
+}
+.evType {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  width: fit-content;
+}
+.typeAlarm {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+.typeWarn {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+.typeService {
+  background: var(--blue-bg);
+  color: var(--primary);
+}
+.btnAccept {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btnAccept.act {
+  background: var(--primary-bg);
+  color: var(--primary);
+  border: 1px solid #bfdbfe;
+}
+.btnAccept.act:hover {
+  background: #dbeafe;
+}
+.btnAccept.dis {
+  background: transparent;
+  color: var(--faint);
+  cursor: not-allowed;
+  border: 1px solid var(--border);
+  opacity: 0.6;
+}

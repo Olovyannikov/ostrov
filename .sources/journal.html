@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Журнал событий — Остров</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f1f5f9;--surface:#fff;--border:#e2e8f0;--text:#1e293b;
+  --muted:#64748b;--faint:#94a3b8;
+  --primary:#0284c7;--primary-bg:#e0f2fe;
+  --ok:#16a34a;--ok-bg:#dcfce7;--ok-border:#86efac;
+  --warn:#b45309;--warn-bg:#fef9c3;--warn-border:#fde047;
+  --alarm:#b91c1c;--alarm-bg:#fee2e2;--alarm-border:#fca5a5;
+  --service:#6366f1;--service-bg:#ede9fe;--service-border:#c4b5fd;
+  --radius:10px;--font:'Inter','Segoe UI',system-ui,sans-serif;
+}
+body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex;min-height:100vh;font-size:14px}
+
+/* SIDEBAR */
+.sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.logo-icon{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#0ea5e9,#0284c7);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-name{font-size:15px;font-weight:700}.logo-sub{font-size:10px;color:var(--muted)}
+.sidebar-nav{flex:1;overflow-y:auto;padding:10px 8px}
+.nav-lbl{font-size:10px;font-weight:600;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;padding:8px 8px 4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--muted)}
+.nav-item:hover{background:#f0f9ff;color:var(--primary)}
+.nav-item.active{background:#e0f2fe;color:var(--primary);font-weight:600}
+.nav-icon{width:16px;height:16px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px}
+.nav-group-hdr{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--muted)}
+.nav-group-hdr:hover{background:#f8fafc}
+.nav-chevron{margin-left:auto;transition:transform .2s}
+.nav-group.open .nav-chevron{transform:rotate(90deg)}
+.nav-children{display:none;padding-left:16px}
+.nav-group.open .nav-children{display:block}
+.nav-child{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:6px;font-size:12px;color:var(--muted);cursor:pointer}
+.nav-child:hover{background:#f8fafc}
+.nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-ok{background:var(--ok)}.dot-warn{background:#f59e0b}.dot-alarm{background:#ef4444}
+.nav-divider{height:1px;background:var(--border);margin:8px 0}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.status-txt{font-size:11px;color:var(--muted)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:48px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0}
+.sidebar-toggle{width:30px;height:30px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.sidebar-toggle:hover{background:#f1f5f9}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.bc-link{cursor:pointer;color:var(--primary)}.bc-sep{color:var(--faint)}.bc-cur{color:var(--text);font-weight:600}
+.topbar-spacer{flex:1}
+.upd{font-size:12px;color:var(--faint)}
+.content{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+
+/* PAGE HEADER */
+.page-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.page-title{font-size:20px;font-weight:700}
+.page-subtitle{font-size:12px;color:var(--muted);margin-top:2px}
+.header-stats{display:flex;gap:20px;margin-left:auto}
+.hstat{text-align:center}
+.hstat-val{font-size:20px;font-weight:700;color:var(--text)}
+.hstat-lbl{font-size:11px;color:var(--muted)}
+
+/* FILTER BAR */
+.filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px}
+.filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.filter-row + .filter-row{margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.f-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.f-divider{width:1px;height:22px;background:var(--border)}
+.f-spacer{flex:1}
+select,input[type=date]{padding:5px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);background:var(--surface);cursor:pointer;outline:none}
+select:focus,input[type=date]:focus{border-color:var(--primary)}
+.search-wrap{position:relative;display:flex;align-items:center}
+.search-wrap svg{position:absolute;left:8px;color:var(--faint);width:13px;height:13px;pointer-events:none}
+.search-input{padding:5px 10px 5px 28px;border:1px solid var(--border);border-radius:7px;font-size:12px;width:200px;outline:none}
+.search-input:focus{border-color:var(--primary)}
+.tab-group{display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.tab-btn{padding:5px 11px;font-size:12px;font-weight:600;border:none;background:var(--surface);color:var(--muted);cursor:pointer;white-space:nowrap}
+.tab-btn:hover{background:#f8fafc}
+.tab-btn.active{background:var(--primary);color:#fff}
+.tc{display:inline-block;padding:0 5px;font-size:10px;border-radius:8px;margin-left:3px;background:rgba(255,255,255,.3)}
+.tab-btn:not(.active) .tc{background:#f1f5f9;color:var(--muted)}
+.btn{display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:7px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-outline{background:var(--surface);color:var(--muted);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:#94a3b8;color:var(--text)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:#0369a1}
+.btn svg{width:13px;height:13px}
+
+/* DATE RANGE PRESETS */
+.date-presets{display:flex;gap:4px}
+.preset{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer}
+.preset:hover{background:#f8fafc}
+.preset.active{background:var(--primary-bg);color:var(--primary);border-color:var(--primary)}
+
+/* TABLE */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.jtable{width:100%;border-collapse:collapse}
+.jtable th{background:#f8fafc;padding:9px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+.jtable th:hover{color:var(--text)}
+.jtable th .sort-arrow{margin-left:4px;opacity:.4}
+.jtable th.sorted .sort-arrow{opacity:1;color:var(--primary)}
+.jtable td{padding:9px 12px;font-size:12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.jtable tr:last-child td{border-bottom:none}
+.jtable tr:hover td{background:#fafafa}
+.jtable tr.row-new td{background:#fff7f7}
+
+.type-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap}
+.type-alarm{background:var(--alarm-bg);color:var(--alarm);border:1px solid var(--alarm-border)}
+.type-warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border)}
+.type-service{background:var(--service-bg);color:var(--service);border:1px solid var(--service-border)}
+.type-ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-border)}
+
+/* TABLE FOOTER */
+.table-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border)}
+.show-more-btn{display:flex;align-items:center;gap:5px;padding:6px 18px;border-radius:7px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer}
+.show-more-btn:hover{border-color:#94a3b8;color:var(--text)}
+.page-info{font-size:12px;color:var(--muted)}
+
+/* EMPTY */
+.empty-state{padding:48px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div><div class="logo-name">Остров</div><div class="logo-sub">Система мониторинга</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-lbl">Навигация</div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Обзор хозяйства
+    </div>
+    <div class="nav-group open">
+      <div class="nav-group-hdr" onclick="this.parentElement.classList.toggle('open')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Участки
+        <svg class="nav-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="nav-children">
+        <div class="nav-child"><span class="nav-dot dot-ok"></span>Ардон</div>
+        <div class="nav-child"><span class="nav-dot dot-alarm"></span>Карджин</div>
+        <div class="nav-child"><span class="nav-dot dot-warn"></span>Дарг Кох</div>
+        <div class="nav-child"><span class="nav-dot dot-ok"></span>5 Озеро</div>
+      </div>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-lbl">События</div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+      Тревоги<span class="nav-badge">3</span>
+    </div>
+    <div class="nav-item active">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Журнал событий
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-lbl">Управление</div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      Отчёты
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Настройки порогов
+    </div>
+  </nav>
+  <div class="sidebar-footer"><div class="status-dot"></div><div class="status-txt">Система активна</div></div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <header class="topbar">
+    <button class="sidebar-toggle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="breadcrumb">
+      <span class="bc-link">Обзор хозяйства</span>
+      <span class="bc-sep">›</span>
+      <span class="bc-cur">Журнал событий</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <span class="upd" id="updTimer">Обновлено 5 сек. назад</span>
+  </header>
+
+  <div class="content">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div>
+        <div class="page-title">Журнал событий</div>
+        <div class="page-subtitle">Полная история событий по всем участкам</div>
+      </div>
+      <div class="header-stats">
+        <div class="hstat"><div class="hstat-val" id="statTotal">50</div><div class="hstat-lbl">Всего событий</div></div>
+        <div class="hstat"><div class="hstat-val" style="color:var(--alarm)" id="statAlarm">—</div><div class="hstat-lbl">Аварий</div></div>
+        <div class="hstat"><div class="hstat-val" style="color:var(--warn)"  id="statWarn">—</div><div class="hstat-lbl">Предупреждений</div></div>
+        <div class="hstat"><div class="hstat-val" style="color:var(--ok)"    id="statOk">—</div><div class="hstat-lbl">Восстановлений</div></div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filter-bar">
+      <!-- Row 1: tabs + search + export -->
+      <div class="filter-row">
+        <div class="tab-group">
+          <button class="tab-btn active" id="tab-all"     onclick="setTab('all')">Все<span class="tc" id="tc-all">50</span></button>
+          <button class="tab-btn"        id="tab-alarm"   onclick="setTab('alarm')">Аварии<span class="tc" id="tc-alarm">—</span></button>
+          <button class="tab-btn"        id="tab-warn"    onclick="setTab('warn')">Предупреждения<span class="tc" id="tc-warn">—</span></button>
+          <button class="tab-btn"        id="tab-service" onclick="setTab('service')">Сервис<span class="tc" id="tc-service">—</span></button>
+          <button class="tab-btn"        id="tab-ok"      onclick="setTab('ok')">Восстановление<span class="tc" id="tc-ok">—</span></button>
+        </div>
+        <div class="f-divider"></div>
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" id="searchQ" placeholder="Поиск по сообщению, датчику…" oninput="render()">
+        </div>
+        <div class="f-spacer"></div>
+        <button class="btn btn-outline" onclick="exportCSV()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Экспорт CSV
+        </button>
+        <button class="btn btn-outline">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Экспорт Excel
+        </button>
+      </div>
+      <!-- Row 2: date range + site + operator -->
+      <div class="filter-row">
+        <span class="f-lbl">Период:</span>
+        <div class="date-presets">
+          <div class="preset active" id="pre-today"  onclick="setPreset('today')">Сегодня</div>
+          <div class="preset"        id="pre-3d"     onclick="setPreset('3d')">3 дня</div>
+          <div class="preset"        id="pre-7d"     onclick="setPreset('7d')">7 дней</div>
+          <div class="preset"        id="pre-30d"    onclick="setPreset('30d')">30 дней</div>
+          <div class="preset"        id="pre-custom" onclick="setPreset('custom')">Произвольный</div>
+        </div>
+        <span id="customDates" style="display:none;align-items:center;gap:6px;display:none">
+          <input type="date" id="dateFrom" value="2026-06-11" onchange="render()">
+          <span style="color:var(--faint)">—</span>
+          <input type="date" id="dateTo"   value="2026-06-11" onchange="render()">
+        </span>
+        <div class="f-divider"></div>
+        <span class="f-lbl">Участок:</span>
+        <select id="filterSite" onchange="render()">
+          <option value="">Все</option>
+          <option>5 Озеро</option><option>Карджин</option><option>Ардон</option><option>Дарг Кох</option>
+        </select>
+        <div class="f-divider"></div>
+        <span class="f-lbl">Оператор:</span>
+        <select id="filterOp" onchange="render()">
+          <option value="">Все</option>
+          <option>Иванов А.</option><option>Петров В.</option><option>Сидоров Н.</option><option>Система</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table class="jtable">
+        <thead>
+          <tr>
+            <th onclick="sortBy('type')">Тип <span class="sort-arrow">↕</span></th>
+            <th onclick="sortBy('time')" class="sorted">Дата / Время <span class="sort-arrow">↓</span></th>
+            <th onclick="sortBy('site')">Участок <span class="sort-arrow">↕</span></th>
+            <th>Группа / Бассейн</th>
+            <th>Датчик</th>
+            <th>Сообщение</th>
+            <th>Значение</th>
+            <th onclick="sortBy('accepted')">Статус <span class="sort-arrow">↕</span></th>
+            <th>Принял</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="emptyState" class="empty-state" style="display:none">
+        <p style="color:var(--muted)">Событий не найдено</p>
+      </div>
+      <div class="table-footer">
+        <span class="page-info" id="pageInfo">Показано 15 из 50</span>
+        <button class="show-more-btn" id="showMoreBtn" onclick="showMore()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="6 9 12 15 18 9"/></svg>
+          Показать ещё
+        </button>
+        <span></span>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const ALL = [{"id": "EVT-001", "date": "11.06.2026", "time": "03:32", "type": "alarm", "site": "Карджин", "group": "A_51–75", "basin": "Б-32", "sensor": "T-Б32", "msg": "Критически низкий O₂: 6.4 мг/л", "value": "7.7 мг/л", "accepted": false, "acceptedBy": "", "acceptedAt": "03:46"}, {"id": "EVT-002", "date": "11.06.2026", "time": "03:21", "type": "alarm", "site": "Дарг Кох", "group": "КГ-1", "basin": "Б-65", "sensor": "O2-Б65-вх", "msg": "Нет связи с датчиком T-07", "value": "8.8 мг/л", "accepted": false, "acceptedBy": "", "acceptedAt": "03:40"}, {"id": "EVT-003", "date": "11.06.2026", "time": "03:10", "type": "warn", "site": "5 Озеро", "group": "A_26–50", "basin": "Б-90", "sensor": "pH-Б90", "msg": "Низкий O₂: 7.2 мг/л", "value": "9.9", "accepted": false, "acceptedBy": "", "acceptedAt": "03:09"}, {"id": "EVT-004", "date": "11.06.2026", "time": "02:54", "type": "warn", "site": "Дарг Кох", "group": "ДК-1", "basin": "Б-46", "sensor": "pH-Б46", "msg": "NH4 выше нормы: 0.112 мг/л", "value": "0.112", "accepted": true, "acceptedBy": "Система", "acceptedAt": "02:56"}, {"id": "EVT-005", "date": "11.06.2026", "time": "02:28", "type": "alarm", "site": "Ардон", "group": "АД-3", "basin": "Б-25", "sensor": "O2-Б25-вх", "msg": "Нет связи с датчиком O2-Б25-вх", "value": "—", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "02:42"}, {"id": "EVT-006", "date": "11.06.2026", "time": "02:06", "type": "service", "site": "5 Озеро", "group": "A_76–100", "basin": "Б-36", "sensor": "pH-Б36", "msg": "Плановая проверка датчика pH-Б36", "value": "—", "accepted": true, "acceptedBy": "Петров В.", "acceptedAt": "02:17"}, {"id": "EVT-007", "date": "11.06.2026", "time": "01:41", "type": "warn", "site": "5 Озеро", "group": "A_26–50", "basin": "Б-69", "sensor": "T-Б69", "msg": "Низкий O₂: 7.4 мг/л", "value": "7.4 мг/л", "accepted": true, "acceptedBy": "Петров В.", "acceptedAt": "01:52"}, {"id": "EVT-008", "date": "11.06.2026", "time": "01:13", "type": "warn", "site": "5 Озеро", "group": "A_26–50", "basin": "Б-05", "sensor": "NH4-Б05", "msg": "NH4 выше нормы: 0.091 мг/л", "value": "0.091", "accepted": true, "acceptedBy": "Сидоров Н.", "acceptedAt": "01:17"}, {"id": "EVT-009", "date": "11.06.2026", "time": "00:34", "type": "warn", "site": "Дарг Кох", "group": "ДК-2", "basin": "Б-19", "sensor": "T-Б19", "msg": "pH ниже нормы: 6.1", "value": "6.1", "accepted": true, "acceptedBy": "Система", "acceptedAt": "00:49"}, {"id": "EVT-010", "date": "11.06.2026", "time": "00:01", "type": "service", "site": "Ардон", "group": "АД-1", "basin": "Б-18", "sensor": "NH4-Б18", "msg": "Кормушка переведена в сервис", "value": "—", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "00:04"}, {"id": "EVT-011", "date": "10.06.2026", "time": "23:43", "type": "warn", "site": "Дарг Кох", "group": "ДК-1", "basin": "Б-50", "sensor": "NH4-Б50", "msg": "Температура выше нормы: 10.1 °C", "value": "10.1", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "23:54"}, {"id": "EVT-012", "date": "10.06.2026", "time": "23:18", "type": "warn", "site": "Ардон", "group": "АД-1", "basin": "Б-38", "sensor": "T-Б38", "msg": "Температура выше нормы: 10.0 °C", "value": "10.0", "accepted": true, "acceptedBy": "Петров В.", "acceptedAt": "23:27"}, {"id": "EVT-013", "date": "10.06.2026", "time": "23:04", "type": "ok", "site": "Ардон", "group": "АД-3", "basin": "Б-65", "sensor": "T-Б65", "msg": "O₂ вернулся в норму: 8.2 мг/л", "value": "8.2 мг/л", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "23:14"}, {"id": "EVT-014", "date": "10.06.2026", "time": "22:36", "type": "warn", "site": "Дарг Кох", "group": "ДК-1", "basin": "Б-15", "sensor": "pH-Б15", "msg": "NH4 выше нормы: 0.09 мг/л", "value": "0.09", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "22:38"}, {"id": "EVT-015", "date": "10.06.2026", "time": "21:57", "type": "ok", "site": "5 Озеро", "group": "A_26–50", "basin": "Б-17", "sensor": "NH4-Б17", "msg": "Авария снята оператором", "value": "—", "accepted": true, "acceptedBy": "Сидоров Н.", "acceptedAt": "22:06"}, {"id": "EVT-016", "date": "10.06.2026", "time": "21:22", "type": "warn", "site": "Карджин", "group": "КГ-1", "basin": "Б-92", "sensor": "NH4-Б92", "msg": "pH ниже нормы: 6.4", "value": "6.4", "accepted": true, "acceptedBy": "Система", "acceptedAt": "21:24"}, {"id": "EVT-017", "date": "10.06.2026", "time": "20:59", "type": "alarm", "site": "Карджин", "group": "КГ-1", "basin": "Б-44", "sensor": "T-Б44", "msg": "Критически низкий O₂: 6.3 мг/л", "value": "6.3 мг/л", "accepted": false, "acceptedBy": "", "acceptedAt": ""}, {"id": "EVT-018", "date": "10.06.2026", "time": "20:37", "type": "alarm", "site": "5 Озеро", "group": "A_01–25", "basin": "Б-43", "sensor": "T-Б43", "msg": "Нет связи с датчиком T-Б43", "value": "—", "accepted": true, "acceptedBy": "Петров В.", "acceptedAt": "20:46"}, {"id": "EVT-019", "date": "10.06.2026", "time": "20:21", "type": "warn", "site": "Дарг Кох", "group": "ДК-1", "basin": "Б-61", "sensor": "T-Б61", "msg": "Температура выше нормы: 9.7 °C", "value": "9.7", "accepted": true, "acceptedBy": "Система", "acceptedAt": "20:29"}, {"id": "EVT-020", "date": "10.06.2026", "time": "20:10", "type": "warn", "site": "5 Озеро", "group": "A_01–25", "basin": "Б-52", "sensor": "O2-Б52-вх", "msg": "NH4 выше нормы: 0.09 мг/л", "value": "0.09", "accepted": true, "acceptedBy": "Петров В.", "acceptedAt": "20:17"}, {"id": "EVT-021", "date": "10.06.2026", "time": "19:51", "type": "alarm", "site": "Ардон", "group": "АД-2", "basin": "Б-32", "sensor": "NH4-Б32", "msg": "Нет связи с датчиком NH4-Б32", "value": "—", "accepted": false, "acceptedBy": "", "acceptedAt": ""}, {"id": "EVT-022", "date": "10.06.2026", "time": "19:38", "type": "service", "site": "Карджин", "group": "КГ-1", "basin": "Б-53", "sensor": "NH4-Б53", "msg": "Плановая проверка датчика NH4-Б53", "value": "—", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "19:41"}, {"id": "EVT-023", "date": "10.06.2026", "time": "19:06", "type": "service", "site": "5 Озеро", "group": "A_76–100", "basin": "Б-34", "sensor": "pH-Б34", "msg": "Плановая проверка датчика pH-Б34", "value": "—", "accepted": true, "acceptedBy": "Система", "acceptedAt": "19:09"}, {"id": "EVT-024", "date": "10.06.2026", "time": "18:46", "type": "ok", "site": "Ардон", "group": "АД-1", "basin": "Б-08", "sensor": "O2-Б08-вх", "msg": "O₂ вернулся в норму: 9.1 мг/л", "value": "9.1 мг/л", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "18:56"}, {"id": "EVT-025", "date": "10.06.2026", "time": "18:08", "type": "alarm", "site": "Карджин", "group": "КГ-1", "basin": "Б-66", "sensor": "T-Б66", "msg": "Нет связи с датчиком T-Б66", "value": "—", "accepted": true, "acceptedBy": "Петров В.", "acceptedAt": "18:15"}, {"id": "EVT-026", "date": "10.06.2026", "time": "17:53", "type": "alarm", "site": "Карджин", "group": "КГ-1", "basin": "Б-80", "sensor": "NH4-Б80", "msg": "Нет связи с датчиком NH4-Б80", "value": "—", "accepted": true, "acceptedBy": "Петров В.", "acceptedAt": "18:04"}, {"id": "EVT-027", "date": "10.06.2026", "time": "17:25", "type": "alarm", "site": "Карджин", "group": "КГ-2", "basin": "Б-51", "sensor": "pH-Б51", "msg": "Насос НС-12 — авария", "value": "—", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "17:26"}, {"id": "EVT-028", "date": "10.06.2026", "time": "16:48", "type": "warn", "site": "5 Озеро", "group": "A_01–25", "basin": "Б-69", "sensor": "pH-Б69", "msg": "Низкий O₂: 7.1 мг/л", "value": "7.1 мг/л", "accepted": true, "acceptedBy": "Петров В.", "acceptedAt": "16:54"}, {"id": "EVT-029", "date": "10.06.2026", "time": "16:22", "type": "warn", "site": "Карджин", "group": "КГ-2", "basin": "Б-70", "sensor": "O2-Б70-вх", "msg": "pH ниже нормы: 6.27", "value": "6.27", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "16:37"}, {"id": "EVT-030", "date": "10.06.2026", "time": "16:06", "type": "service", "site": "Ардон", "group": "АД-1", "basin": "Б-14", "sensor": "T-Б14", "msg": "Кормушка переведена в сервис", "value": "—", "accepted": true, "acceptedBy": "Петров В.", "acceptedAt": "16:18"}, {"id": "EVT-031", "date": "10.06.2026", "time": "15:37", "type": "service", "site": "Карджин", "group": "КГ-2", "basin": "Б-65", "sensor": "pH-Б65", "msg": "Плановая проверка датчика pH-Б65", "value": "—", "accepted": false, "acceptedBy": "", "acceptedAt": ""}, {"id": "EVT-032", "date": "10.06.2026", "time": "15:12", "type": "alarm", "site": "5 Озеро", "group": "A_01–25", "basin": "Б-43", "sensor": "pH-Б43", "msg": "Насос НС-03 — авария", "value": "—", "accepted": true, "acceptedBy": "Система", "acceptedAt": "15:21"}, {"id": "EVT-033", "date": "10.06.2026", "time": "15:04", "type": "alarm", "site": "5 Озеро", "group": "A_01–25", "basin": "Б-89", "sensor": "O2-Б89-вх", "msg": "Насос НС-07 — авария", "value": "—", "accepted": true, "acceptedBy": "Петров В.", "acceptedAt": "15:11"}, {"id": "EVT-034", "date": "10.06.2026", "time": "14:48", "type": "alarm", "site": "5 Озеро", "group": "A_51–75", "basin": "Б-47", "sensor": "pH-Б47", "msg": "Критически низкий O₂: 5.8 мг/л", "value": "5.8 мг/л", "accepted": true, "acceptedBy": "Сидоров Н.", "acceptedAt": "15:01"}, {"id": "EVT-035", "date": "10.06.2026", "time": "14:14", "type": "alarm", "site": "Карджин", "group": "КГ-1", "basin": "Б-21", "sensor": "NH4-Б21", "msg": "Насос НС-01 — авария", "value": "—", "accepted": false, "acceptedBy": "", "acceptedAt": ""}, {"id": "EVT-036", "date": "10.06.2026", "time": "13:40", "type": "alarm", "site": "Карджин", "group": "КГ-2", "basin": "Б-21", "sensor": "NH4-Б21", "msg": "Нет связи с датчиком NH4-Б21", "value": "—", "accepted": true, "acceptedBy": "Петров В.", "acceptedAt": "13:44"}, {"id": "EVT-037", "date": "10.06.2026", "time": "13:03", "type": "warn", "site": "Ардон", "group": "АД-2", "basin": "Б-30", "sensor": "O2-Б30-вх", "msg": "Низкий O₂: 7.6 мг/л", "value": "7.6 мг/л", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "13:16"}, {"id": "EVT-038", "date": "10.06.2026", "time": "12:38", "type": "warn", "site": "Ардон", "group": "АД-3", "basin": "Б-66", "sensor": "pH-Б66", "msg": "Температура выше нормы: 10.4 °C", "value": "10.4", "accepted": true, "acceptedBy": "Сидоров Н.", "acceptedAt": "12:41"}, {"id": "EVT-039", "date": "10.06.2026", "time": "12:14", "type": "warn", "site": "5 Озеро", "group": "A_01–25", "basin": "Б-77", "sensor": "pH-Б77", "msg": "Температура выше нормы: 10.3 °C", "value": "10.3", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "12:21"}, {"id": "EVT-040", "date": "10.06.2026", "time": "11:54", "type": "warn", "site": "Ардон", "group": "АД-1", "basin": "Б-91", "sensor": "O2-Б91-вх", "msg": "Температура выше нормы: 10.1 °C", "value": "10.1", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "12:05"}, {"id": "EVT-041", "date": "10.06.2026", "time": "11:25", "type": "warn", "site": "Ардон", "group": "АД-3", "basin": "Б-16", "sensor": "pH-Б16", "msg": "pH ниже нормы: 6.27", "value": "6.27", "accepted": true, "acceptedBy": "Сидоров Н.", "acceptedAt": "11:34"}, {"id": "EVT-042", "date": "10.06.2026", "time": "11:09", "type": "warn", "site": "Карджин", "group": "КГ-2", "basin": "Б-86", "sensor": "T-Б86", "msg": "Температура выше нормы: 10.2 °C", "value": "10.2", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "11:14"}, {"id": "EVT-043", "date": "10.06.2026", "time": "10:43", "type": "ok", "site": "Карджин", "group": "КГ-2", "basin": "Б-75", "sensor": "pH-Б75", "msg": "O₂ вернулся в норму: 8.7 мг/л", "value": "8.7 мг/л", "accepted": true, "acceptedBy": "Петров В.", "acceptedAt": "10:52"}, {"id": "EVT-044", "date": "10.06.2026", "time": "10:05", "type": "service", "site": "Карджин", "group": "КГ-1", "basin": "Б-37", "sensor": "pH-Б37", "msg": "Кормушка переведена в сервис", "value": "—", "accepted": true, "acceptedBy": "Петров В.", "acceptedAt": "10:16"}, {"id": "EVT-045", "date": "10.06.2026", "time": "09:38", "type": "alarm", "site": "Карджин", "group": "КГ-1", "basin": "Б-19", "sensor": "O2-Б19-вх", "msg": "Критически низкий O₂: 5.8 мг/л", "value": "5.8 мг/л", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "09:46"}, {"id": "EVT-046", "date": "10.06.2026", "time": "09:04", "type": "warn", "site": "Карджин", "group": "КГ-2", "basin": "Б-64", "sensor": "T-Б64", "msg": "Температура выше нормы: 9.7 °C", "value": "9.7", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "09:17"}, {"id": "EVT-047", "date": "10.06.2026", "time": "08:29", "type": "service", "site": "Карджин", "group": "КГ-1", "basin": "Б-90", "sensor": "NH4-Б90", "msg": "Кормушка переведена в сервис", "value": "—", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "08:37"}, {"id": "EVT-048", "date": "10.06.2026", "time": "08:13", "type": "service", "site": "Дарг Кох", "group": "ДК-2", "basin": "Б-97", "sensor": "NH4-Б97", "msg": "Плановая проверка датчика NH4-Б97", "value": "—", "accepted": true, "acceptedBy": "Система", "acceptedAt": "08:21"}, {"id": "EVT-049", "date": "10.06.2026", "time": "07:49", "type": "service", "site": "Карджин", "group": "КГ-2", "basin": "Б-99", "sensor": "NH4-Б99", "msg": "Кормушка переведена в сервис", "value": "—", "accepted": true, "acceptedBy": "Иванов А.", "acceptedAt": "08:01"}, {"id": "EVT-050", "date": "10.06.2026", "time": "07:23", "type": "warn", "site": "Карджин", "group": "КГ-2", "basin": "Б-43", "sensor": "O2-Б43-вх", "msg": "NH4 выше нормы: 0.086 мг/л", "value": "0.086", "accepted": true, "acceptedBy": "Петров В.", "acceptedAt": "07:35"}];
+let tab='all', sortCol='time', sortDir=-1, page=15;
+
+// Counts
+function countBy(fn){ return ALL.filter(fn).length; }
+
+function updateCounts() {
+  document.getElementById('statTotal').textContent = ALL.length;
+  document.getElementById('statAlarm').textContent = countBy(e=>e.type==='alarm');
+  document.getElementById('statWarn').textContent  = countBy(e=>e.type==='warn');
+  document.getElementById('statOk').textContent    = countBy(e=>e.type==='ok');
+  document.getElementById('tc-all').textContent    = ALL.length;
+  document.getElementById('tc-alarm').textContent  = countBy(e=>e.type==='alarm');
+  document.getElementById('tc-warn').textContent   = countBy(e=>e.type==='warn');
+  document.getElementById('tc-service').textContent= countBy(e=>e.type==='service');
+  document.getElementById('tc-ok').textContent     = countBy(e=>e.type==='ok');
+}
+
+function setTab(t) {
+  tab=t; page=15;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  render();
+}
+
+function setPreset(p) {
+  document.querySelectorAll('.preset').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pre-'+p).classList.add('active');
+  const cd = document.getElementById('customDates');
+  cd.style.display = p==='custom' ? 'flex' : 'none';
+  render();
+}
+
+function sortBy(col) {
+  if(sortCol===col) sortDir*=-1; else { sortCol=col; sortDir=-1; }
+  document.querySelectorAll('.jtable th').forEach(th=>th.classList.remove('sorted'));
+  render();
+}
+
+function showMore() { page+=15; render(); }
+
+function getFiltered() {
+  const site = document.getElementById('filterSite').value;
+  const op   = document.getElementById('filterOp').value;
+  const q    = document.getElementById('searchQ').value.toLowerCase();
+  return ALL.filter(e => {
+    if(tab!=='all' && e.type!==tab) return false;
+    if(site && e.site!==site) return false;
+    if(op   && e.acceptedBy!==op) return false;
+    if(q && ![e.msg,e.sensor,e.basin,e.site].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function render() {
+  updateCounts();
+  let data = getFiltered();
+
+  // Sort
+  data.sort((a,b)=>{
+    let va=a[sortCol]||'', vb=b[sortCol]||'';
+    if(sortCol==='accepted') { va=a.accepted?1:0; vb=b.accepted?1:0; }
+    return va<vb ? sortDir : va>vb ? -sortDir : 0;
+  });
+
+  const total=data.length, visible=data.slice(0,page);
+  const tbody=document.getElementById('tbody');
+  const empty=document.getElementById('emptyState');
+  const smBtn=document.getElementById('showMoreBtn');
+
+  document.getElementById('pageInfo').textContent =
+    total===0 ? 'Нет событий' : `Показано ${Math.min(page,total)} из ${total}`;
+  smBtn.style.display = page>=total ? 'none' : '';
+  tbody.innerHTML='';
+  empty.style.display = total===0 ? 'block' : 'none';
+
+  const tLabel={alarm:'🔴 Авария',warn:'🟡 Предупреждение',service:'🔵 Сервис',ok:'🟢 Восстановление'};
+  const tCls={alarm:'type-alarm',warn:'type-warn',service:'type-service',ok:'type-ok'};
+
+  visible.forEach(e=>{
+    const tr=document.createElement('tr');
+    if(!e.accepted && e.type!=='ok' && e.type!=='service') tr.className='row-new';
+    tr.innerHTML=`
+      <td><span class="type-badge ${tCls[e.type]||''}">${tLabel[e.type]||e.type}</span></td>
+      <td style="white-space:nowrap"><span style="color:var(--muted);font-size:11px">${e.date}</span><br><strong>${e.time}</strong></td>
+      <td><strong>${e.site}</strong></td>
+      <td style="font-size:11px;color:var(--muted)">${e.group}<br><span style="color:var(--text);font-weight:600;font-size:12px">${e.basin}</span></td>
+      <td style="font-size:11px;color:var(--muted)">${e.sensor}</td>
+      <td style="max-width:200px;font-size:12px">${e.msg}</td>
+      <td><code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:11px">${e.value||'—'}</code></td>
+      <td>${e.accepted
+        ? '<span style="color:var(--ok);font-size:11px;font-weight:600">✓ Принято</span>'
+        : '<span style="color:var(--alarm);font-size:11px;font-weight:700">● Не принято</span>'}</td>
+      <td style="font-size:11px;color:var(--muted)">${e.acceptedBy||'—'}<br><span style="color:var(--faint)">${e.acceptedAt||''}</span></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function exportCSV() {
+  const data = getFiltered();
+  const cols = ['id','date','time','type','site','group','basin','sensor','msg','value','accepted','acceptedBy','acceptedAt'];
+  const head = ['ID','Дата','Время','Тип','Участок','Группа','Бассейн','Датчик','Сообщение','Значение','Принято','Кто принял','Время принятия'];
+  const rows = [head, ...data.map(e=>cols.map(c=>JSON.stringify(e[c]||'')))];
+  const csv  = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='journal_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+render();
+let secs=5;
+setInterval(()=>{secs++;if(secs>60)secs=1;document.getElementById('updTimer').textContent='Обновлено '+secs+' сек. назад';},1000);
+</script>
+</body>
+</html>

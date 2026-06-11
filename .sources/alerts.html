@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Тревоги и предупреждения — Остров</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f1f5f9;--surface:#fff;--border:#e2e8f0;--text:#1e293b;
+  --muted:#64748b;--faint:#94a3b8;
+  --primary:#0284c7;--primary-bg:#e0f2fe;
+  --ok:#16a34a;--ok-bg:#dcfce7;--ok-border:#86efac;
+  --warn:#b45309;--warn-bg:#fef9c3;--warn-border:#fde047;
+  --alarm:#b91c1c;--alarm-bg:#fee2e2;--alarm-border:#fca5a5;
+  --service:#6366f1;--service-bg:#ede9fe;--service-border:#c4b5fd;
+  --radius:10px;--font:'Inter','Segoe UI',system-ui,sans-serif;
+}
+body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex;min-height:100vh;font-size:14px}
+
+/* SIDEBAR */
+.sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.logo-icon{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#0ea5e9,#0284c7);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon svg{width:18px;height:18px}
+.logo-name{font-size:15px;font-weight:700}.logo-sub{font-size:10px;color:var(--muted)}
+.sidebar-nav{flex:1;overflow-y:auto;padding:10px 8px}
+.nav-lbl{font-size:10px;font-weight:600;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;padding:8px 8px 4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--muted)}
+.nav-item:hover{background:#f0f9ff;color:var(--primary)}
+.nav-item.active{background:#e0f2fe;color:var(--primary);font-weight:600}
+.nav-icon{width:16px;height:16px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px}
+.nav-group-hdr{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--muted)}
+.nav-group-hdr:hover{background:#f8fafc}
+.nav-chevron{margin-left:auto;transition:transform .2s}
+.nav-group.open .nav-chevron{transform:rotate(90deg)}
+.nav-children{display:none;padding-left:16px}
+.nav-group.open .nav-children{display:block}
+.nav-child{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:6px;font-size:12px;color:var(--muted);cursor:pointer}
+.nav-child:hover{background:#f8fafc}
+.nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-ok{background:var(--ok)}.dot-warn{background:#f59e0b}.dot-alarm{background:#ef4444}
+.nav-divider{height:1px;background:var(--border);margin:8px 0}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.status-txt{font-size:11px;color:var(--muted)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:48px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:10px;flex-shrink:0}
+.sidebar-toggle{width:30px;height:30px;border:none;background:none;cursor:pointer;
+  border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.sidebar-toggle:hover{background:#f1f5f9}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.bc-link{cursor:pointer;color:var(--primary)}.bc-link:hover{text-decoration:underline}
+.bc-sep{color:var(--faint)}.bc-cur{color:var(--text);font-weight:600}
+.topbar-spacer{flex:1}
+.upd{font-size:12px;color:var(--faint)}
+.content{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+
+/* PAGE HEADER */
+.page-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.page-title{font-size:20px;font-weight:700}
+.page-subtitle{font-size:12px;color:var(--muted);margin-top:2px}
+.summary-chips{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.schip{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700;border:1.5px solid}
+.schip-alarm{background:var(--alarm-bg);color:var(--alarm);border-color:var(--alarm-border)}
+.schip-warn{background:var(--warn-bg);color:var(--warn);border-color:var(--warn-border)}
+.schip-service{background:var(--service-bg);color:var(--service);border-color:var(--service-border)}
+.schip-dot{width:8px;height:8px;border-radius:50%}
+
+/* FILTER BAR */
+.filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tab-group{display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.tab-btn{padding:5px 12px;font-size:12px;font-weight:600;border:none;background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+.tab-btn:hover{background:#f8fafc}
+.tab-btn.active{background:var(--primary);color:#fff}
+.tab-cnt{display:inline-block;padding:0 5px;font-size:10px;border-radius:8px;margin-left:3px;background:rgba(255,255,255,.3)}
+.tab-btn:not(.active) .tab-cnt{background:#f1f5f9;color:var(--muted)}
+.f-divider{width:1px;height:22px;background:var(--border)}
+.f-spacer{flex:1}
+select{padding:5px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);background:var(--surface);cursor:pointer;outline:none}
+select:focus{border-color:var(--primary)}
+.search-wrap{position:relative;display:flex;align-items:center}
+.search-wrap svg{position:absolute;left:8px;color:var(--faint);width:13px;height:13px;pointer-events:none}
+.search-input{padding:5px 10px 5px 28px;border:1px solid var(--border);border-radius:7px;font-size:12px;width:190px;outline:none;color:var(--text)}
+.search-input:focus{border-color:var(--primary)}
+
+/* SORT DROPDOWN */
+.sort-wrap{position:relative}
+.sort-btn{display:flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-weight:600;background:var(--surface);color:var(--muted);cursor:pointer}
+.sort-btn:hover{border-color:#94a3b8;color:var(--text)}
+.sort-btn svg{width:13px;height:13px}
+.sort-dropdown{position:absolute;top:calc(100% + 4px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:100;min-width:160px;overflow:hidden;display:none}
+.sort-dropdown.open{display:block}
+.sort-opt{padding:8px 14px;font-size:12px;cursor:pointer;color:var(--text);display:flex;align-items:center;gap:8px}
+.sort-opt:hover{background:#f8fafc}
+.sort-opt.active{color:var(--primary);font-weight:600}
+.sort-opt .check{width:14px;height:14px;flex-shrink:0}
+
+/* ACTION BUTTONS */
+.btn{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:7px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-outline{background:var(--surface);color:var(--muted);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:#94a3b8;color:var(--text)}
+.btn svg{width:13px;height:13px}
+
+/* TABLE */
+.events-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.events-table{width:100%;border-collapse:collapse}
+.events-table th{background:#f8fafc;padding:9px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);white-space:nowrap}
+.events-table td{padding:10px 12px;font-size:12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.events-table tr:last-child td{border-bottom:none}
+.events-table tr:hover td{background:#fafafa}
+.events-table tr.row-new td{background:#fff7f7}
+
+/* TYPE BADGE */
+.type-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap}
+.type-alarm{background:var(--alarm-bg);color:var(--alarm);border:1px solid var(--alarm-border)}
+.type-warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border)}
+.type-service{background:var(--service-bg);color:var(--service);border:1px solid var(--service-border)}
+
+/* ACCEPT BTN */
+.accept-btn{padding:4px 11px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--alarm-border);background:var(--alarm-bg);color:var(--alarm);transition:all .15s;white-space:nowrap}
+.accept-btn:hover{background:#fecaca}
+.accept-btn:disabled{background:var(--ok-bg);color:var(--ok);border-color:var(--ok-border);cursor:default}
+
+/* FOOTER */
+.table-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border)}
+.show-more-btn{display:flex;align-items:center;gap:5px;padding:6px 18px;border-radius:7px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s}
+.show-more-btn:hover{border-color:#94a3b8;color:var(--text)}
+.show-more-btn svg{width:13px;height:13px}
+.pagination-info{font-size:12px;color:var(--muted)}
+
+/* EMPTY */
+.empty-state{padding:48px;text-align:center;color:var(--muted)}
+.empty-icon{width:40px;height:40px;margin:0 auto 12px;color:var(--faint)}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div><div class="logo-name">Остров</div><div class="logo-sub">Система мониторинга</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-lbl">Навигация</div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Обзор хозяйства
+    </div>
+    <div class="nav-group open">
+      <div class="nav-group-hdr" onclick="this.parentElement.classList.toggle('open')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Участки
+        <svg class="nav-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="nav-children">
+        <div class="nav-child"><span class="nav-dot dot-ok"></span>Ардон</div>
+        <div class="nav-child"><span class="nav-dot dot-alarm"></span>Карджин</div>
+        <div class="nav-child"><span class="nav-dot dot-warn"></span>Дарг Кох</div>
+        <div class="nav-child"><span class="nav-dot dot-ok"></span>5 Озеро</div>
+      </div>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-lbl">События</div>
+    <div class="nav-item active">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+      Тревоги<span class="nav-badge" id="sidebarBadge">3</span>
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Журнал событий
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-lbl">Управление</div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      Отчёты
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Настройки порогов
+    </div>
+  </nav>
+  <div class="sidebar-footer"><div class="status-dot"></div><div class="status-txt">Система активна</div></div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <header class="topbar">
+    <button class="sidebar-toggle">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="breadcrumb">
+      <span class="bc-link">Обзор хозяйства</span>
+      <span class="bc-sep">›</span>
+      <span class="bc-cur">Тревоги и предупреждения</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <span class="upd" id="updTimer">Обновлено 5 сек. назад</span>
+  </header>
+
+  <div class="content">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div>
+        <div class="page-title">Тревоги и предупреждения</div>
+        <div class="page-subtitle">Активные события по всем участкам · 11.06.2026</div>
+      </div>
+      <div class="summary-chips">
+        <div class="schip schip-alarm"><div class="schip-dot" style="background:#ef4444"></div><span id="cntAlarm">3</span> Аварии</div>
+        <div class="schip schip-warn"><div class="schip-dot" style="background:#f59e0b"></div><span id="cntWarn">4</span> Предупреждения</div>
+        <div class="schip schip-service"><div class="schip-dot" style="background:#6366f1"></div><span id="cntService">2</span> Сервис</div>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <!-- Tabs -->
+      <div class="tab-group">
+        <button class="tab-btn active" id="tab-all"     onclick="setTab('all')">Все<span class="tab-cnt" id="tc-all">10</span></button>
+        <button class="tab-btn"        id="tab-alarm"   onclick="setTab('alarm')">Аварии<span class="tab-cnt" id="tc-alarm">3</span></button>
+        <button class="tab-btn"        id="tab-warn"    onclick="setTab('warn')">Предупреждения<span class="tab-cnt" id="tc-warn">4</span></button>
+        <button class="tab-btn"        id="tab-service" onclick="setTab('service')">Сервис<span class="tab-cnt" id="tc-service">2</span></button>
+        <button class="tab-btn"        id="tab-new"     onclick="setTab('new')">Не принятые<span class="tab-cnt" id="tc-new">3</span></button>
+      </div>
+      <div class="f-divider"></div>
+      <!-- Site -->
+      <select id="filterSite" onchange="render()">
+        <option value="">Все участки</option>
+        <option>5 Озеро</option><option>Карджин</option><option>Ардон</option><option>Дарг Кох</option>
+      </select>
+      <!-- Search -->
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" id="searchQ" placeholder="Поиск…" oninput="render()">
+      </div>
+      <div class="f-spacer"></div>
+      <!-- Sort dropdown -->
+      <div class="sort-wrap" id="sortWrap">
+        <button class="sort-btn" onclick="toggleSort()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+          <span id="sortLabel">По важности</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="sort-dropdown" id="sortDrop">
+          <div class="sort-opt active" id="sopt-priority" onclick="setSort('priority','По важности')">
+            <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>По важности
+          </div>
+          <div class="sort-opt" id="sopt-time" onclick="setSort('time','По времени')">
+            <svg class="check" viewBox="0 0 24 24" fill="none" stroke="none"></svg>По времени
+          </div>
+          <div class="sort-opt" id="sopt-site" onclick="setSort('site','По участку')">
+            <svg class="check" viewBox="0 0 24 24" fill="none" stroke="none"></svg>По участку
+          </div>
+        </div>
+      </div>
+      <!-- Actions -->
+      <button class="btn btn-outline" onclick="acceptAll()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Принять все аварии
+      </button>
+      <button class="btn btn-outline">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Экспорт
+      </button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="events-wrap">
+      <table class="events-table">
+        <thead>
+          <tr>
+            <th>Тип</th>
+            <th>Время</th>
+            <th>Участок</th>
+            <th>Группа / Бассейн</th>
+            <th>Датчик / Объект</th>
+            <th>Сообщение</th>
+            <th>Значение</th>
+            <th>Статус</th>
+            <th>Действие</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="emptyState" class="empty-state" style="display:none">
+        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <p>Событий не найдено</p>
+      </div>
+      <div class="table-footer">
+        <span class="pagination-info" id="pageInfo">Показано 5 из 10</span>
+        <button class="show-more-btn" id="showMoreBtn" onclick="showMore()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          Показать ещё
+        </button>
+        <span style="width:1px"></span>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const ALL_EVENTS = [{"id": "EVT-001", "time": "03:32", "date": "11.06.2026", "type": "alarm", "accepted": false, "site": "5 Озеро", "group": "A_01–25", "basin": "Б-45", "sensor": "O2-Б45-вх", "msg": "Критически низкий O₂: 5.9 мг/л", "threshold": "< 7.0", "value": "5.9 мг/л"}, {"id": "EVT-002", "time": "03:29", "date": "11.06.2026", "type": "alarm", "accepted": false, "site": "Карджин", "group": "КГ-1", "basin": "Б-03", "sensor": "Насос НС-03", "msg": "Насос НС-03 — авария", "threshold": "—", "value": "Связь потеряна"}, {"id": "EVT-003", "time": "03:21", "date": "11.06.2026", "type": "alarm", "accepted": false, "site": "Дарг Кох", "group": "ДК-1", "basin": "—", "sensor": "T-07", "msg": "Нет связи с датчиком T-07", "threshold": "—", "value": "Offline"}, {"id": "EVT-004", "time": "02:47", "date": "11.06.2026", "type": "warn", "accepted": true, "site": "5 Озеро", "group": "A_76–100", "basin": "Б-89", "sensor": "O2-Б89-вх", "msg": "Низкий O₂: 7.8 мг/л", "threshold": "< 8.0", "value": "7.8 мг/л", "acceptedBy": "Иванов А.", "acceptedAt": "02:51"}, {"id": "EVT-005", "time": "02:15", "date": "11.06.2026", "type": "warn", "accepted": true, "site": "5 Озеро", "group": "A_51–75", "basin": "Б-67", "sensor": "O2-Б67-вх", "msg": "Низкий O₂: 7.4 мг/л", "threshold": "< 8.0", "value": "7.4 мг/л", "acceptedBy": "Иванов А.", "acceptedAt": "02:20"}, {"id": "EVT-006", "time": "01:58", "date": "11.06.2026", "type": "warn", "accepted": true, "site": "Ардон", "group": "АД-2", "basin": "Б-22", "sensor": "pH-Б22", "msg": "pH ниже нормы: 6.3", "threshold": "< 6.5", "value": "6.3", "acceptedBy": "Петров В.", "acceptedAt": "02:05"}, {"id": "EVT-007", "time": "01:30", "date": "11.06.2026", "type": "warn", "accepted": true, "site": "Карджин", "group": "КГ-2", "basin": "Б-12", "sensor": "O2-Б12-вх", "msg": "Низкий O₂: 7.1 мг/л", "threshold": "< 8.0", "value": "7.1 мг/л", "acceptedBy": "Иванов А.", "acceptedAt": "01:35"}, {"id": "EVT-008", "time": "00:44", "date": "11.06.2026", "type": "service", "accepted": true, "site": "Карджин", "group": "КГ-2", "basin": "Б-12", "sensor": "O2-Б12-out", "msg": "Датчик O2-12-out переведён в сервис", "threshold": "—", "value": "Сервис", "acceptedBy": "Петров В.", "acceptedAt": "00:44"}, {"id": "EVT-009", "time": "00:15", "date": "11.06.2026", "type": "service", "accepted": true, "site": "5 Озеро", "group": "A_76–100", "basin": "Б-78", "sensor": "T-Б78", "msg": "Плановая проверка датчика T-Б78", "threshold": "—", "value": "Сервис", "acceptedBy": "Система", "acceptedAt": "00:15"}, {"id": "EVT-010", "time": "23:50", "date": "10.06.2026", "type": "warn", "accepted": true, "site": "Дарг Кох", "group": "ДК-2", "basin": "Б-18", "sensor": "NH4-Б18", "msg": "NH4 выше нормы: 0.09 мг/л", "threshold": "> 0.08", "value": "0.09 мг/л", "acceptedBy": "Иванов А.", "acceptedAt": "23:55"}];
+const PRIO = {alarm:0, warn:1, service:2};
+
+let tab  = 'all';
+let sort = 'priority';
+let page = 5;
+
+// Close sort dropdown on outside click
+document.addEventListener('click', e => {
+  if (!document.getElementById('sortWrap').contains(e.target))
+    document.getElementById('sortDrop').classList.remove('open');
+});
+
+function toggleSort() {
+  document.getElementById('sortDrop').classList.toggle('open');
+}
+
+function setSort(s, label) {
+  sort = s; page = 5;
+  document.getElementById('sortLabel').textContent = label;
+  document.querySelectorAll('.sort-opt').forEach(o => {
+    o.classList.remove('active');
+    o.querySelector('.check').setAttribute('stroke', 'none');
+  });
+  const el = document.getElementById('sopt-' + s);
+  el.classList.add('active');
+  el.querySelector('.check').setAttribute('stroke', 'currentColor');
+  document.getElementById('sortDrop').classList.remove('open');
+  render();
+}
+
+function setTab(t) {
+  tab = t; page = 5;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + t).classList.add('active');
+  render();
+}
+
+function showMore() {
+  page += 5; render();
+}
+
+function getFiltered() {
+  const site = document.getElementById('filterSite').value;
+  const q    = document.getElementById('searchQ').value.toLowerCase();
+  return ALL_EVENTS.filter(e => {
+    if (tab === 'alarm'   && e.type !== 'alarm')   return false;
+    if (tab === 'warn'    && e.type !== 'warn')    return false;
+    if (tab === 'service' && e.type !== 'service') return false;
+    if (tab === 'new'     && e.accepted)           return false;
+    if (site && e.site !== site) return false;
+    if (q && ![e.msg, e.sensor, e.basin, e.site].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function render() {
+  let data = getFiltered();
+
+  // Sort
+  data.sort((a, b) => {
+    if (sort === 'priority') {
+      const pa = (a.accepted ? 10 : 0) + PRIO[a.type];
+      const pb = (b.accepted ? 10 : 0) + PRIO[b.type];
+      return pa !== pb ? pa - pb : b.time.localeCompare(a.time);
+    }
+    if (sort === 'time') return b.time.localeCompare(a.time);
+    if (sort === 'site') return a.site.localeCompare(b.site, 'ru');
+    return 0;
+  });
+
+  const total   = data.length;
+  const visible = data.slice(0, page);
+  const tbody   = document.getElementById('tbody');
+  const empty   = document.getElementById('emptyState');
+  const smBtn   = document.getElementById('showMoreBtn');
+
+  document.getElementById('pageInfo').textContent =
+    total === 0 ? 'Нет событий' : `Показано ${Math.min(page, total)} из ${total}`;
+  smBtn.style.display = page >= total ? 'none' : '';
+
+  tbody.innerHTML = '';
+  empty.style.display = total === 0 ? 'block' : 'none';
+
+  const typeLabel = {alarm:'🔴 Авария', warn:'🟡 Предупреждение', service:'🔵 Сервис'};
+  const typeCls   = {alarm:'type-alarm', warn:'type-warn', service:'type-service'};
+
+  visible.forEach(e => {
+    const tr = document.createElement('tr');
+    if (!e.accepted && e.type !== 'service') tr.className = 'row-new';
+
+    const statusHtml = e.accepted
+      ? `<span style="color:var(--ok);font-size:11px;font-weight:600">✓ Принято${e.acceptedBy ? '<br><span style=\"color:var(--faint);font-weight:400\">' + e.acceptedBy + '</span>' : ''}</span>`
+      : `<span style="color:var(--alarm);font-size:11px;font-weight:700">● Не принято</span>`;
+
+    const actionHtml = e.type === 'service'
+      ? `<span style="font-size:11px;color:var(--faint)">—</span>`
+      : e.accepted
+        ? `<button class="accept-btn" disabled>✓ Принято</button>`
+        : `<button class="accept-btn" onclick="acceptOne('${e.id}',this)">Принять</button>`;
+
+    tr.innerHTML = `
+      <td><span class="type-badge ${typeCls[e.type]}">${typeLabel[e.type]}</span></td>
+      <td style="white-space:nowrap"><span style="color:var(--muted);font-size:11px">${e.date}</span><br><strong>${e.time}</strong></td>
+      <td><strong>${e.site}</strong></td>
+      <td style="color:var(--muted);font-size:11px">${e.group}<br><span style="color:var(--text);font-weight:600;font-size:12px">${e.basin}</span></td>
+      <td style="font-size:11px;color:var(--muted)">${e.sensor}</td>
+      <td style="max-width:200px;font-size:12px">${e.msg}</td>
+      <td><code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:11px">${e.value}</code></td>
+      <td id="st-${e.id}">${statusHtml}</td>
+      <td>${actionHtml}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  updateCounts();
+}
+
+function acceptOne(id, btn) {
+  const e = ALL_EVENTS.find(x => x.id === id);
+  if (!e) return;
+  e.accepted = true;
+  e.acceptedBy = 'Оператор';
+  btn.disabled = true; btn.textContent = '✓ Принято';
+  const st = document.getElementById('st-' + id);
+  if (st) st.innerHTML = '<span style="color:var(--ok);font-size:11px;font-weight:600">✓ Принято</span>';
+  updateCounts();
+}
+
+function acceptAll() {
+  ALL_EVENTS.filter(e => e.type === 'alarm' && !e.accepted).forEach(e => {
+    e.accepted = true; e.acceptedBy = 'Оператор';
+  });
+  render();
+}
+
+function updateCounts() {
+  const total = ALL_EVENTS.length;
+  const alarms   = ALL_EVENTS.filter(e => e.type === 'alarm').length;
+  const warns    = ALL_EVENTS.filter(e => e.type === 'warn').length;
+  const services = ALL_EVENTS.filter(e => e.type === 'service').length;
+  const newOnes  = ALL_EVENTS.filter(e => !e.accepted).length;
+
+  document.getElementById('cntAlarm').textContent   = alarms;
+  document.getElementById('cntWarn').textContent    = warns;
+  document.getElementById('cntService').textContent = services;
+  document.getElementById('tc-all').textContent     = total;
+  document.getElementById('tc-alarm').textContent   = alarms;
+  document.getElementById('tc-warn').textContent    = warns;
+  document.getElementById('tc-service').textContent = services;
+  document.getElementById('tc-new').textContent     = newOnes;
+
+  const badge = document.getElementById('sidebarBadge');
+  const newAlarms = ALL_EVENTS.filter(e => e.type === 'alarm' && !e.accepted).length;
+  badge.textContent   = newAlarms;
+  badge.style.display = newAlarms ? '' : 'none';
+}
+
+// Init
+render();
+
+let secs = 5;
+setInterval(() => {
+  secs++; if (secs > 60) secs = 1;
+  document.getElementById('updTimer').textContent = 'Обновлено ' + secs + ' сек. назад';
+}, 1000);
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# Git hooks (installed via `pnpm prepare` / postinstall).
+pre-commit:
+  parallel: true
+  commands:
+    eslint:
+      glob: '*.{ts,tsx}'
+      run: pnpm exec eslint {staged_files}
+    prettier:
+      glob: '*.{ts,tsx,css,json,md,mjs,yml,yaml,html}'
+      run: pnpm exec prettier --check {staged_files}
+
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm exec commitlint --edit {1}

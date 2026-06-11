@@ -1,0 +1,51 @@
+/* Design tokens shared by every screen. Unified on the cyan "water" palette
+   used by 7 of the 8 prototypes; both naming conventions are aliased so the
+   ported per-screen CSS keeps working verbatim. */
+:root {
+  --bg: #f1f5f9;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --surface-3: #f1f4f8;
+  --border: #e2e8f0;
+  --border-2: #d0d7e3;
+
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --muted: #64748b;
+  --text-faint: #94a3b8;
+  --faint: #94a3b8;
+
+  --primary: #0284c7;
+  --primary-bg: #e0f2fe;
+  --primary-hover: #0369a1;
+
+  --ok: #16a34a;
+  --success: #16a34a;
+  --ok-bg: #dcfce7;
+  --success-bg: #f0fdf4;
+  --ok-border: #86efac;
+
+  --warn: #b45309;
+  --warning: #b45309;
+  --warn-bg: #fef9c3;
+  --warning-bg: #fffbeb;
+  --warn-border: #fde047;
+
+  --alarm: #b91c1c;
+  --danger: #b91c1c;
+  --alarm-bg: #fee2e2;
+  --danger-bg: #fef2f2;
+  --alarm-border: #fca5a5;
+
+  --service: #6366f1;
+  --service-bg: #ede9fe;
+  --service-border: #c4b5fd;
+
+  --blue-bg: #eff6ff;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}

@@ -1,0 +1,563 @@
+/* ─── Settings layout ─── */
+.settingsWrap {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.settingsTabs {
+  width: 200px;
+  min-width: 200px;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.stab {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+  transition: all 0.15s;
+  background: none;
+  border: none;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+  font-weight: 400;
+}
+
+.stab:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.stabActive {
+  background: var(--primary-bg);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.settingsContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* ─── Cards ─── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.card:last-child {
+  margin-bottom: 0;
+}
+
+.cardNoPad {
+  padding: 0;
+}
+
+.cardTitle {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.cardSub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.cardDivider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+/* ─── Form rows ─── */
+.fRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.fGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fGroupFull {
+  grid-column: span 2;
+}
+
+.fLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--surface);
+  outline: none;
+  font-family: inherit;
+}
+
+.input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px #bae6fd55;
+}
+
+.inputDisabled {
+  background: var(--bg);
+  color: var(--muted);
+}
+
+/* ─── Buttons ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.btnPrimary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btnPrimary:hover {
+  background: var(--primary-hover, #0369a1);
+}
+
+.btnOutline {
+  background: var(--surface);
+  color: var(--muted);
+  border: 1.5px solid var(--border);
+}
+
+.btnOutline:hover {
+  color: var(--text);
+  border-color: #94a3b8;
+}
+
+.btnRow {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* ─── Section header ─── */
+.sectionHdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ─── Users table ─── */
+.utableWrap {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.utable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.utable th {
+  background: #f8fafc;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border);
+}
+
+.utable td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.utable tr:last-child td {
+  border-bottom: none;
+}
+
+.utable tr:hover td {
+  background: #fafafa;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary-bg);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatarInactive {
+  background: #f1f5f9;
+  color: var(--muted);
+}
+
+.textMuted {
+  color: var(--muted);
+}
+
+/* ─── Role pills ─── */
+.rolePill {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.roleAdmin {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.roleDuty {
+  background: var(--primary-bg);
+  color: var(--primary);
+}
+
+.roleViewer {
+  background: #f1f5f9;
+  color: var(--muted);
+}
+
+/* ─── Badges ─── */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.badgeOk {
+  background: var(--success-bg, #dcfce7);
+  color: var(--success, #16a34a);
+}
+
+.badgeInactive {
+  background: #f1f5f9;
+  color: var(--muted);
+}
+
+/* ─── Icon buttons ─── */
+.tblActions {
+  display: flex;
+  gap: 6px;
+}
+
+.iconBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  transition: all 0.15s;
+}
+
+.iconBtn:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.iconBtnDanger:hover {
+  background: var(--danger-bg, #fee2e2);
+  color: var(--danger, #b91c1c);
+  border-color: #fca5a5;
+}
+
+/* ─── Thresholds table ─── */
+.threshTableWrap {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.threshTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.threshTable th {
+  background: #f8fafc;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+
+.threshTable td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.threshTable tr:last-child td {
+  border-bottom: none;
+}
+
+.levelWarn {
+  color: var(--warning, #b45309);
+  font-weight: 600;
+}
+
+.levelAlarm {
+  color: var(--danger, #b91c1c);
+  font-weight: 600;
+}
+
+.paramName {
+  font-weight: 600;
+}
+
+.paramUnit {
+  font-size: 11px;
+  color: var(--muted);
+  margin-left: 4px;
+}
+
+.threshInput {
+  width: 80px;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: center;
+  font-family: inherit;
+  outline: none;
+}
+
+.threshInput:focus {
+  border-color: var(--primary);
+}
+
+.threshDisabled {
+  color: var(--faint);
+  background: var(--bg);
+}
+
+/* ─── Channel cards ─── */
+.channelGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+.channelCard {
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  user-select: none;
+}
+
+.channelCard:hover {
+  border-color: var(--primary);
+}
+
+.channelCardActive {
+  border-color: var(--primary);
+  background: var(--primary-bg);
+}
+
+.channelIcon {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 6px;
+  border-radius: 8px;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.channelIconActive {
+  background: var(--primary);
+  color: #fff;
+}
+
+.channelName {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.channelStatus {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ─── Toggle switches ─── */
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.toggleRow:last-child {
+  border-bottom: none;
+}
+
+.toggleInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.toggleName {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.toggleDesc {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.toggle {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  flex-shrink: 0;
+  display: inline-block;
+  margin-left: 12px;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggleTrack {
+  position: absolute;
+  inset: 0;
+  background: #cbd5e1;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.toggle input:checked + .toggleTrack {
+  background: var(--primary);
+}
+
+.toggleTrack::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  top: 3px;
+  left: 3px;
+  transition: 0.25s;
+  box-shadow: 0 1px 3px #0003;
+}
+
+.toggle input:checked + .toggleTrack::after {
+  left: 19px;
+}
+
+/* ─── Profile ─── */
+.profileTop {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.profileAvatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary-bg);
+  color: var(--primary);
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #bae6fd;
+  flex-shrink: 0;
+}
+
+.profileName {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.profileRole {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
