@@ -452,6 +452,13 @@
   .content {
     padding: 14px;
   }
+  .cardFooter {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .evChips {
+    flex-wrap: wrap;
+  }
   .tableHeader {
     display: none;
   }
