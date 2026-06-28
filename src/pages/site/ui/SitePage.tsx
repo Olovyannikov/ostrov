@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from '@tanstack/react-router';
 import { Topbar } from '@/widgets/topbar';
 import { StatusBadge, Breadcrumb } from '@/shared/ui';
@@ -11,11 +11,51 @@ import styles from './SitePage.module.css';
 type ViewMode = 'cards' | 'scheme';
 type FilterMode = 'all' | 'alarm' | 'warn' | 'ok' | 'feed' | 'nofeed' | 'lowo2' | 'highph';
 
-interface TooltipState {
+interface TipRow {
+  k: string;
+  v: string;
+}
+interface TipState {
   visible: boolean;
   x: number;
   y: number;
-  basin: Basin | null;
+  title: string;
+  rows: TipRow[];
+}
+
+const EMPTY_TIP: TipState = { visible: false, x: 0, y: 0, title: '', rows: [] };
+
+const basinByNum = new Map<number, Basin>(BASINS.map((b) => [b.num, b]));
+
+/** Группы в порядке тока воды для схемы каскада (сверху вниз). */
+const SCHEME_GROUPS = [
+  { label: 'A_01–25', from: 1, to: 25 },
+  { label: 'A_26–50', from: 26, to: 50 },
+  { label: 'A_51–75', from: 51, to: 75 },
+  { label: 'A_76–100', from: 76, to: 100 },
+  { label: 'Группа 101–130 (30 бассейнов)', from: 101, to: 130 },
+];
+
+const PUMP_TIP: TipRow[] = [
+  { k: 'Статус', v: '✓ Работает' },
+  { k: 'Расход', v: '850 м³/ч' },
+  { k: 'Напор', v: '4.2 м' },
+  { k: 'Мощность', v: '75 кВт' },
+  { k: 'Последнее ТО', v: '12.05.2026' },
+  { k: 'Следующее ТО', v: '12.08.2026' },
+];
+
+const MF_TIP: TipRow[] = [
+  { k: 'Статус', v: '✓ Работает' },
+  { k: 'Тип', v: 'Барабанный' },
+  { k: 'Ячейка', v: '60 мкм' },
+  { k: 'Промывка', v: 'Авто' },
+  { k: 'Последнее ТО', v: '20.05.2026' },
+  { k: 'Следующее ТО', v: '20.08.2026' },
+];
+
+function rangeNums(from: number, to: number): number[] {
+  return Array.from({ length: to - from + 1 }, (_, i) => from + i);
 }
 
 function basinMatchesFilter(b: Basin, filter: FilterMode): boolean {
@@ -30,6 +70,32 @@ function basinMatchesFilter(b: Basin, filter: FilterMode): boolean {
   return true;
 }
 
+function groupAverages(nums: number[]) {
+  const arr = nums.map((n) => basinByNum.get(n)).filter((b): b is Basin => b !== undefined);
+  if (!arr.length) return { o2: '—', temp: '—', ph: '—', nh4: '—' };
+  const avg = (key: 'o2' | 'temp' | 'ph') =>
+    (arr.reduce((s, b) => s + b[key], 0) / arr.length).toFixed(1);
+  return {
+    o2: avg('o2'),
+    temp: avg('temp'),
+    ph: avg('ph'),
+    nh4: (arr.reduce((s, b) => s + b.nh4, 0) / arr.length).toFixed(2),
+  };
+}
+
+function basinTip(b: Basin): { title: string; rows: TipRow[] } {
+  return {
+    title: `Бассейн Б-${String(b.num).padStart(2, '0')}`,
+    rows: [
+      { k: 'O₂', v: `${b.o2} мг/л` },
+      { k: 'Темп.', v: `${b.temp} °C` },
+      { k: 'Кормушка', v: b.feeder ? '✓ Вкл' : '— Выкл' },
+      { k: 'Время работы', v: b.feedTime },
+      { k: 'Кормлений', v: b.feedCount ? `${b.feedCount} раз` : '0 раз' },
+    ],
+  };
+}
+
 export function SitePage() {
   const { siteId } = useParams({ strict: false });
   const navigate = useNavigate();
@@ -40,7 +106,8 @@ export function SitePage() {
   const [view, setView] = useState<ViewMode>('cards');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [filter, setFilter] = useState<FilterMode>('all');
-  const [tooltip, setTooltip] = useState<TooltipState>({ visible: false, x: 0, y: 0, basin: null });
+  const [fullscreen, setFullscreen] = useState(false);
+  const [tip, setTip] = useState<TipState>(EMPTY_TIP);
 
   const feedersOn = BASINS.filter((b) => b.feeder).length;
 
@@ -62,24 +129,28 @@ export function SitePage() {
     [navigate]
   );
 
-  const showTooltip = useCallback((e: React.MouseEvent, basin: Basin) => {
-    setTooltip({ visible: true, x: e.clientX + 14, y: e.clientY + 14, basin });
+  const showTip = useCallback((e: React.MouseEvent, title: string, rows: TipRow[]) => {
+    setTip({ visible: true, x: e.clientX + 14, y: e.clientY + 14, title, rows });
   }, []);
-
-  const moveTooltip = useCallback((e: React.MouseEvent) => {
-    setTooltip((prev) => ({ ...prev, x: e.clientX + 14, y: e.clientY + 14 }));
+  const moveTip = useCallback((e: React.MouseEvent) => {
+    setTip((prev) => (prev.visible ? { ...prev, x: e.clientX + 14, y: e.clientY + 14 } : prev));
   }, []);
+  const hideTip = useCallback(() => setTip((prev) => ({ ...prev, visible: false })), []);
 
-  const hideTooltip = useCallback(() => {
-    setTooltip((prev) => ({ ...prev, visible: false }));
-  }, []);
-
-  // Close tooltip when switching away from scheme
+  // Hide tooltip when leaving scheme view
   useEffect(() => {
-    if (view !== 'scheme') {
-      setTooltip((prev) => ({ ...prev, visible: false }));
-    }
+    if (view !== 'scheme') setTip((prev) => ({ ...prev, visible: false }));
   }, [view]);
+
+  // Esc closes fullscreen
+  useEffect(() => {
+    if (!fullscreen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setFullscreen(false);
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [fullscreen]);
 
   const filterActiveClass: Record<FilterMode, string> = {
     all: styles.filterActiveAll,
@@ -91,6 +162,91 @@ export function SitePage() {
     lowo2: styles.filterActiveWarn,
     highph: styles.filterActiveWarn,
   };
+
+  const filterBar = (
+    <div className={styles.filterBar}>
+      <FilterButton
+        active={filter === 'all'}
+        activeClass={filterActiveClass.all}
+        onClick={() => setFilter('all')}
+      >
+        <span>Все бассейны</span>
+        <span className={styles.filterCount}>{countByStatus.all}</span>
+      </FilterButton>
+      <div className={styles.filterDivider} />
+      <FilterButton
+        active={filter === 'alarm'}
+        activeClass={filterActiveClass.alarm}
+        onClick={() => setFilter('alarm')}
+      >
+        <span className={styles.fDot} style={{ background: '#ef4444' }} />
+        Авария
+        <span className={styles.filterCount}>{countByStatus.alarm}</span>
+      </FilterButton>
+      <FilterButton
+        active={filter === 'warn'}
+        activeClass={filterActiveClass.warn}
+        onClick={() => setFilter('warn')}
+      >
+        <span className={styles.fDot} style={{ background: '#f59e0b' }} />
+        Внимание
+        <span className={styles.filterCount}>{countByStatus.warn}</span>
+      </FilterButton>
+      <FilterButton
+        active={filter === 'ok'}
+        activeClass={filterActiveClass.ok}
+        onClick={() => setFilter('ok')}
+      >
+        <span className={styles.fDot} style={{ background: '#16a34a' }} />
+        Норма
+        <span className={styles.filterCount}>{countByStatus.ok}</span>
+      </FilterButton>
+      <div className={styles.filterDivider} />
+      <FilterButton
+        active={filter === 'feed'}
+        activeClass={filterActiveClass.feed}
+        onClick={() => setFilter('feed')}
+      >
+        🟢 Кормушка вкл
+      </FilterButton>
+      <FilterButton
+        active={filter === 'nofeed'}
+        activeClass={filterActiveClass.nofeed}
+        onClick={() => setFilter('nofeed')}
+      >
+        ⚪ Кормушка выкл
+      </FilterButton>
+      <div className={styles.filterDivider} />
+      <FilterButton
+        active={filter === 'lowo2'}
+        activeClass={filterActiveClass.lowo2}
+        onClick={() => setFilter('lowo2')}
+      >
+        📉 O₂ &lt; 8.0
+      </FilterButton>
+      <FilterButton
+        active={filter === 'highph'}
+        activeClass={filterActiveClass.highph}
+        onClick={() => setFilter('highph')}
+      >
+        ⚗️ pH &gt; 7.1
+      </FilterButton>
+    </div>
+  );
+
+  const scheme = (
+    <SiteScheme
+      filter={filter}
+      onBasinEnter={(e, b) => {
+        const t = basinTip(b);
+        showTip(e, t.title, t.rows);
+      }}
+      onMove={moveTip}
+      onLeave={hideTip}
+      onBasinClick={handleBasinClick}
+      onEquipEnter={(e, title, rows) => showTip(e, title, rows)}
+    />
+  );
 
   return (
     <>
@@ -107,7 +263,7 @@ export function SitePage() {
         <div className={styles.siteHeader}>
           <div>
             <div className={styles.siteTitle}>{siteName}</div>
-            <div className={styles.siteSubtitle}>100 бассейнов · 4 группы · 142 датчика онлайн</div>
+            <div className={styles.siteSubtitle}>130 бассейнов · 5 групп · 142 датчика онлайн</div>
           </div>
           <div className={styles.siteKpis}>
             <div className={styles.skpi}>
@@ -127,7 +283,7 @@ export function SitePage() {
               <div className={styles.skpiLbl}>NH4 мг/л</div>
             </div>
             <div className={styles.skpi}>
-              <div className={cn(styles.skpiVal, styles.skpiOk)}>{feedersOn}/100</div>
+              <div className={cn(styles.skpiVal, styles.skpiOk)}>{feedersOn}/130</div>
               <div className={styles.skpiLbl}>Кормушки</div>
             </div>
           </div>
@@ -177,18 +333,29 @@ export function SitePage() {
               Авария
             </div>
           </div>
+          {view === 'scheme' && (
+            <button className={styles.btnFs} onClick={() => setFullscreen(true)}>
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+              </svg>
+              Полный экран
+            </button>
+          )}
         </div>
 
         {/* CARDS VIEW */}
         {view === 'cards' && (
           <div className={styles.cardsView}>
             {BASIN_GROUPS.map((group) => {
-              const nums = Array.from(
-                { length: group.to - group.from + 1 },
-                (_, i) => group.from + i
-              );
-              const groupBasins = nums
-                .map((n) => BASINS.find((b) => b.num === n))
+              const groupBasins = rangeNums(group.from, group.to)
+                .map((n) => basinByNum.get(n))
                 .filter((b): b is Basin => b !== undefined);
               const alarmCount = groupBasins.filter((b) => b.status === 'alarm').length;
               const warnCount = groupBasins.filter((b) => b.status === 'warn').length;
@@ -243,147 +410,49 @@ export function SitePage() {
         {/* SCHEME VIEW */}
         {view === 'scheme' && (
           <div className={styles.schemeView}>
-            {/* Filter bar */}
-            <div className={styles.filterBar}>
-              <FilterButton
-                active={filter === 'all'}
-                activeClass={filterActiveClass.all}
-                onClick={() => setFilter('all')}
-              >
-                <span>Все бассейны</span>
-                <span className={styles.filterCount}>{countByStatus.all}</span>
-              </FilterButton>
-              <div className={styles.filterDivider} />
-              <FilterButton
-                active={filter === 'alarm'}
-                activeClass={filterActiveClass.alarm}
-                onClick={() => setFilter('alarm')}
-              >
-                <span className={styles.fDot} style={{ background: '#ef4444' }} />
-                Авария
-                <span className={styles.filterCount}>{countByStatus.alarm}</span>
-              </FilterButton>
-              <FilterButton
-                active={filter === 'warn'}
-                activeClass={filterActiveClass.warn}
-                onClick={() => setFilter('warn')}
-              >
-                <span className={styles.fDot} style={{ background: '#f59e0b' }} />
-                Внимание
-                <span className={styles.filterCount}>{countByStatus.warn}</span>
-              </FilterButton>
-              <FilterButton
-                active={filter === 'ok'}
-                activeClass={filterActiveClass.ok}
-                onClick={() => setFilter('ok')}
-              >
-                <span className={styles.fDot} style={{ background: '#16a34a' }} />
-                Норма
-                <span className={styles.filterCount}>{countByStatus.ok}</span>
-              </FilterButton>
-              <div className={styles.filterDivider} />
-              <FilterButton
-                active={filter === 'feed'}
-                activeClass={filterActiveClass.feed}
-                onClick={() => setFilter('feed')}
-              >
-                🟢 Кормушка вкл
-              </FilterButton>
-              <FilterButton
-                active={filter === 'nofeed'}
-                activeClass={filterActiveClass.nofeed}
-                onClick={() => setFilter('nofeed')}
-              >
-                ⚪ Кормушка выкл
-              </FilterButton>
-              <div className={styles.filterDivider} />
-              <FilterButton
-                active={filter === 'lowo2'}
-                activeClass={filterActiveClass.lowo2}
-                onClick={() => setFilter('lowo2')}
-              >
-                📉 O₂ &lt; 8.0
-              </FilterButton>
-              <FilterButton
-                active={filter === 'highph'}
-                activeClass={filterActiveClass.highph}
-                onClick={() => setFilter('highph')}
-              >
-                ⚗️ pH &gt; 7.1
-              </FilterButton>
-            </div>
-
-            {/* Scheme container */}
-            <div className={styles.schemeContainer}>
-              {/* TOP: basins 71–100 */}
-              <SchemeSection
-                nums={Array.from({ length: 30 }, (_, i) => 71 + i)}
-                label="30 бассейнов 4×40м · Блок 71–100"
-                labelBg="#dbeafe"
-                filter={filter}
-                onMouseEnter={showTooltip}
-                onMouseMove={moveTooltip}
-                onMouseLeave={hideTooltip}
-                onBasinClick={handleBasinClick}
-              />
-              <div className={styles.schRoad} />
-
-              {/* MIDDLE double: A_76–100 | A_51–75 */}
-              <div className={styles.schDouble}>
-                <SchemeSection
-                  nums={Array.from({ length: 25 }, (_, i) => 100 - i)}
-                  label="A_76–100"
-                  labelBg="#e0f2fe"
-                  filter={filter}
-                  onMouseEnter={showTooltip}
-                  onMouseMove={moveTooltip}
-                  onMouseLeave={hideTooltip}
-                  onBasinClick={handleBasinClick}
-                />
-                <SchemeSection
-                  nums={Array.from({ length: 25 }, (_, i) => 75 - i)}
-                  label="A_51–75 · Ардон 5-е Озеро"
-                  labelBg="#fef3c7"
-                  filter={filter}
-                  onMouseEnter={showTooltip}
-                  onMouseMove={moveTooltip}
-                  onMouseLeave={hideTooltip}
-                  onBasinClick={handleBasinClick}
-                />
-              </div>
-              <div className={styles.schRoad} />
-
-              {/* BOTTOM double: A_26–50 | A_01–25 */}
-              <div className={styles.schDouble}>
-                <SchemeSection
-                  nums={Array.from({ length: 25 }, (_, i) => 50 - i)}
-                  label="A_26–50"
-                  labelBg="#f0fdf4"
-                  filter={filter}
-                  onMouseEnter={showTooltip}
-                  onMouseMove={moveTooltip}
-                  onMouseLeave={hideTooltip}
-                  onBasinClick={handleBasinClick}
-                />
-                <SchemeSection
-                  nums={Array.from({ length: 25 }, (_, i) => 25 - i)}
-                  label="A_01–25"
-                  labelBg="#f0fdf4"
-                  filter={filter}
-                  onMouseEnter={showTooltip}
-                  onMouseMove={moveTooltip}
-                  onMouseLeave={hideTooltip}
-                  onBasinClick={handleBasinClick}
-                />
-              </div>
-            </div>
+            {filterBar}
+            <div className={styles.schemeContainer}>{scheme}</div>
           </div>
         )}
       </div>
 
+      {/* FULLSCREEN OVERLAY */}
+      {fullscreen && (
+        <div className={styles.fsOverlay}>
+          <div className={styles.fsBar}>
+            <span className={styles.fsTitle}>{siteName} — Схема бассейнов</span>
+            <div className={styles.fsFilters}>{filterBar}</div>
+            <button className={styles.fsCollapseBtn} onClick={() => setFullscreen(false)}>
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+              </svg>
+              Свернуть
+            </button>
+          </div>
+          <div className={styles.fsBody}>
+            <div className={styles.schemeContainer}>{scheme}</div>
+          </div>
+        </div>
+      )}
+
       {/* TOOLTIP */}
-      {tooltip.visible && tooltip.basin && (
-        <SchemeTooltip basin={tooltip.basin} x={tooltip.x} y={tooltip.y} />
+      {tip.visible && (
+        <div className={styles.tooltip} style={{ left: tip.x, top: tip.y }}>
+          <div className={styles.ttTitle}>{tip.title}</div>
+          {tip.rows.map((r) => (
+            <div key={r.k} className={styles.ttRow}>
+              <span>{r.k}</span>
+              <span className={styles.ttVal}>{r.v}</span>
+            </div>
+          ))}
+        </div>
       )}
     </>
   );
@@ -397,7 +466,7 @@ interface BasinCardProps {
 }
 
 function BasinCard({ basin, onClick }: BasinCardProps) {
-  const { num, o2, temp, ph, nh4, feeder, status } = basin;
+  const { num, o2, temp, feeder, feedTime, feedCount, status } = basin;
   const numStr = String(num).padStart(2, '0');
   return (
     <div className={cn(styles.basinCard, styles[status])} onClick={onClick}>
@@ -410,60 +479,193 @@ function BasinCard({ basin, onClick }: BasinCardProps) {
         <span className={styles.bcKey}>Темп.</span>
         <span className={styles.bcVal}>{temp} °C</span>
       </div>
-      <div className={styles.bcRow}>
-        <span className={styles.bcKey}>pH</span>
-        <span className={styles.bcVal}>{ph}</span>
-      </div>
-      <div className={styles.bcRow}>
-        <span className={styles.bcKey}>NH4</span>
-        <span className={styles.bcVal}>{nh4}</span>
-      </div>
       <div className={styles.bcFeeder}>
         <div className={cn(styles.feederDot, !feeder && styles.feederOff)} />
-        {feeder ? 'Кормушка вкл' : 'Кормушка выкл'}
+        {feeder ? `Вкл · ${feedTime} · ${feedCount} корм.` : 'Выкл'}
       </div>
     </div>
   );
 }
 
-interface SchemeSectionProps {
-  nums: number[];
-  label: string;
-  labelBg: string;
+interface SiteSchemeProps {
   filter: FilterMode;
-  onMouseEnter: (e: React.MouseEvent, basin: Basin) => void;
-  onMouseMove: (e: React.MouseEvent) => void;
-  onMouseLeave: () => void;
+  onBasinEnter: (e: React.MouseEvent, basin: Basin) => void;
+  onMove: (e: React.MouseEvent) => void;
+  onLeave: () => void;
   onBasinClick: (num: number) => void;
+  onEquipEnter: (e: React.MouseEvent, title: string, rows: TipRow[]) => void;
 }
 
-function SchemeSection({
-  nums,
-  label,
-  labelBg,
+function SiteScheme({
   filter,
-  onMouseEnter,
-  onMouseMove,
-  onMouseLeave,
+  onBasinEnter,
+  onMove,
+  onLeave,
   onBasinClick,
-}: SchemeSectionProps) {
+  onEquipEnter,
+}: SiteSchemeProps) {
   return (
-    <div className={styles.schSection}>
-      <div className={styles.schSectionLabel} style={{ background: labelBg }}>
-        {label}
+    <div className={styles.schOuter}>
+      {/* Left canal column with equipment */}
+      <div className={styles.schLeftCol}>
+        <div className={styles.schCanalPipe} />
+        <div className={styles.schLeftInner}>
+          <div className={styles.schInLabel}>↓ ВХОД</div>
+          <div className={styles.schCanalText}>Канал подачи воды (с Ардона)</div>
+          <div className={styles.schFlowArrow}>↓</div>
+          <div
+            className={styles.schPumpCard}
+            onMouseEnter={(e) => onEquipEnter(e, 'Насос', PUMP_TIP)}
+            onMouseMove={onMove}
+            onMouseLeave={onLeave}
+          >
+            <div className={styles.schPumpIcon}>⊕</div>
+            <div className={styles.schPumpName}>Насос</div>
+          </div>
+          <div className={styles.schFlowArrow}>↓</div>
+          <div
+            className={styles.schMfCard}
+            onMouseEnter={(e) => onEquipEnter(e, 'Микрофильтр (МФ)', MF_TIP)}
+            onMouseMove={onMove}
+            onMouseLeave={onLeave}
+          >
+            <div className={styles.schMfDot} />
+            <div className={styles.schMfName}>
+              МФ
+              <br />
+              <span className={styles.schMfSub}>микрофильтр</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className={styles.schRow}>
+
+      {/* Groups cascade column */}
+      <div className={styles.schGroupsCol}>
+        <div className={styles.schBanner}>↓ ВХОД воды (с Ардона после МФ)</div>
+
+        <div className={styles.schPair}>
+          <SchemeGroup
+            group={SCHEME_GROUPS[0]}
+            filter={filter}
+            onBasinEnter={onBasinEnter}
+            onMove={onMove}
+            onLeave={onLeave}
+            onBasinClick={onBasinClick}
+            onEquipEnter={onEquipEnter}
+          />
+          <SchemeGroup
+            group={SCHEME_GROUPS[1]}
+            filter={filter}
+            onBasinEnter={onBasinEnter}
+            onMove={onMove}
+            onLeave={onLeave}
+            onBasinClick={onBasinClick}
+            onEquipEnter={onEquipEnter}
+          />
+        </div>
+        <div className={styles.schFlowText}>↓ по течению</div>
+        <div className={styles.schPair}>
+          <SchemeGroup
+            group={SCHEME_GROUPS[2]}
+            filter={filter}
+            onBasinEnter={onBasinEnter}
+            onMove={onMove}
+            onLeave={onLeave}
+            onBasinClick={onBasinClick}
+            onEquipEnter={onEquipEnter}
+          />
+          <SchemeGroup
+            group={SCHEME_GROUPS[3]}
+            filter={filter}
+            onBasinEnter={onBasinEnter}
+            onMove={onMove}
+            onLeave={onLeave}
+            onBasinClick={onBasinClick}
+            onEquipEnter={onEquipEnter}
+          />
+        </div>
+        <div className={styles.schFlowText}>↓ по течению</div>
+        <SchemeGroup
+          group={SCHEME_GROUPS[4]}
+          filter={filter}
+          onBasinEnter={onBasinEnter}
+          onMove={onMove}
+          onLeave={onLeave}
+          onBasinClick={onBasinClick}
+          onEquipEnter={onEquipEnter}
+        />
+
+        <div className={styles.schBanner}>↓ ВЫХОД</div>
+      </div>
+    </div>
+  );
+}
+
+interface SchemeGroupProps {
+  group: { label: string; from: number; to: number };
+  filter: FilterMode;
+  onBasinEnter: (e: React.MouseEvent, basin: Basin) => void;
+  onMove: (e: React.MouseEvent) => void;
+  onLeave: () => void;
+  onBasinClick: (num: number) => void;
+  onEquipEnter: (e: React.MouseEvent, title: string, rows: TipRow[]) => void;
+}
+
+function SchemeGroup({
+  group,
+  filter,
+  onBasinEnter,
+  onMove,
+  onLeave,
+  onBasinClick,
+  onEquipEnter,
+}: SchemeGroupProps) {
+  const nums = rangeNums(group.from, group.to);
+  const avg = groupAverages(nums);
+  const groupTip: TipRow[] = [
+    { k: 'O₂ (среднее)', v: `${avg.o2} мг/л` },
+    { k: 'Темп. (среднее)', v: `${avg.temp} °C` },
+    { k: 'pH (среднее)', v: `${avg.ph}` },
+    { k: 'NH4 (среднее)', v: `${avg.nh4} мг/л` },
+  ];
+
+  return (
+    <div>
+      <div className={styles.schGrpHdr}>
+        <strong className={styles.schGrpLabel}>{group.label}</strong>
+        <span className={styles.schGrpStat}>
+          O₂: <b>{avg.o2}</b> мг/л
+        </span>
+        <span className={styles.schGrpStat}>
+          Темп.: <b>{avg.temp}</b> °C
+        </span>
+        <span className={cn(styles.schGrpStat, styles.schGrpStatMuted)}>
+          pH: <b>{avg.ph}</b>
+        </span>
+        <span className={styles.schGrpStat}>
+          NH4: <b>{avg.nh4}</b> мг/л
+        </span>
+        <span
+          className={styles.schGrpFaint}
+          onMouseEnter={(e) => onEquipEnter(e, group.label, groupTip)}
+          onMouseMove={onMove}
+          onMouseLeave={onLeave}
+        >
+          (общие по группе)
+        </span>
+      </div>
+      <div className={styles.schGrpRow}>
         {nums.map((n) => {
-          const b = BASINS.find((basin) => basin.num === n);
+          const b = basinByNum.get(n);
           if (!b) return null;
           const dimmed = !basinMatchesFilter(b, filter);
           return (
             <div
               key={n}
               className={cn(styles.schBasin, styles[b.status], dimmed && styles.schDimmed)}
-              onMouseEnter={(e) => !dimmed && onMouseEnter(e, b)}
-              onMouseMove={(e) => !dimmed && onMouseMove(e)}
-              onMouseLeave={() => !dimmed && onMouseLeave()}
+              onMouseEnter={(e) => !dimmed && onBasinEnter(e, b)}
+              onMouseMove={(e) => !dimmed && onMove(e)}
+              onMouseLeave={() => !dimmed && onLeave()}
               onClick={() => !dimmed && onBasinClick(n)}
             >
               <div className={cn(styles.schDot, !b.feeder && styles.schDotOff)} />
@@ -489,41 +691,5 @@ function FilterButton({ active, activeClass, onClick, children }: FilterButtonPr
     <button className={cn(styles.filterBtn, active && activeClass)} onClick={onClick}>
       {children}
     </button>
-  );
-}
-
-interface SchemeTooltipProps {
-  basin: Basin;
-  x: number;
-  y: number;
-}
-
-function SchemeTooltip({ basin, x, y }: SchemeTooltipProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const numStr = String(basin.num).padStart(2, '0');
-  return (
-    <div ref={ref} className={styles.tooltip} style={{ left: x, top: y }}>
-      <div className={styles.ttTitle}>Бассейн Б-{numStr}</div>
-      <div className={styles.ttRow}>
-        <span>O₂</span>
-        <span className={styles.ttVal}>{basin.o2} мг/л</span>
-      </div>
-      <div className={styles.ttRow}>
-        <span>Темп.</span>
-        <span className={styles.ttVal}>{basin.temp} °C</span>
-      </div>
-      <div className={styles.ttRow}>
-        <span>pH</span>
-        <span className={styles.ttVal}>{basin.ph}</span>
-      </div>
-      <div className={styles.ttRow}>
-        <span>NH4</span>
-        <span className={styles.ttVal}>{basin.nh4} мг/л</span>
-      </div>
-      <div className={styles.ttRow}>
-        <span>Кормушка</span>
-        <span className={styles.ttVal}>{basin.feeder ? '✓ Вкл' : '— Выкл'}</span>
-      </div>
-    </div>
   );
 }

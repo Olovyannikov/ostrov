@@ -159,7 +159,7 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex
 /* ── TOOLTIP ── */
 .tooltip{position:fixed;z-index:9999;background:#1e293b;color:#f1f5f9;
   border-radius:8px;padding:10px 12px;font-size:12px;pointer-events:none;
-  box-shadow:0 4px 16px rgba(0,0,0,.3);min-width:140px;display:none}
+  box-shadow:0 4px 16px rgba(0,0,0,.3);min-width:140px;display:none;max-width:220px}
 .tt-title{font-weight:700;margin-bottom:6px;font-size:13px}
 .tt-row{display:flex;justify-content:space-between;gap:16px;margin-bottom:2px}
 .tt-val{font-weight:600;color:#7dd3fc}
@@ -192,6 +192,32 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex
 /* Cards view filter */
 .basin-card.dimmed { opacity: .15; pointer-events: none; }
 
+
+/* ── LEFT CANAL COLUMN ── */
+.sch-outer{display:flex;gap:0;align-items:stretch;margin-bottom:4px;}
+.sch-left-col{display:flex;flex-direction:column;align-items:center;width:76px;flex-shrink:0;margin-right:10px;position:relative;}
+.sch-canal-pipe{position:absolute;left:50%;top:0;bottom:0;width:14px;transform:translateX(-50%);background:#bfdbfe;border-radius:7px;z-index:0;}
+.sch-left-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;padding:4px 0;}
+.sch-in-label{background:#3b82f6;color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;}
+.sch-canal-text{writing-mode:vertical-lr;transform:rotate(180deg);font-size:9px;font-weight:600;color:#1e3a8a;white-space:nowrap;padding:8px 0;}
+.sch-flow-arrow{font-size:18px;color:#3b82f6;line-height:1;}
+.sch-pump-card{width:56px;height:56px;border-radius:50%;border:2.5px solid #db2777;background:#fff0f6;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:1px;transition:box-shadow .15s,transform .12s;}
+.sch-pump-card:hover{box-shadow:0 0 0 4px rgba(219,39,119,.15);transform:scale(1.06);}
+.sch-pump-icon{font-size:20px;color:#db2777;line-height:1;}
+.sch-pump-name{font-size:9px;font-weight:700;color:#1e293b;}
+.sch-mf-card{width:64px;border-radius:10px;border:2px solid #818cf8;background:#eef2ff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:3px;padding:6px 4px;transition:box-shadow .15s,transform .12s;}
+.sch-mf-card:hover{box-shadow:0 0 0 4px rgba(129,140,248,.2);transform:scale(1.06);}
+.sch-mf-dot{width:8px;height:8px;border-radius:50%;background:#16a34a;}
+.sch-mf-name{font-size:9px;font-weight:700;color:#1e293b;text-align:center;line-height:1.3;}
+.sch-groups-col{flex:1;display:flex;flex-direction:column;gap:0;min-width:0;}
+.sch-grp-hdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px 6px 0 0;border-bottom:none;}
+.sch-grp-faint{font-size:10px;color:#94a3b8;font-style:italic;cursor:pointer;border-bottom:1px dashed transparent;transition:border-color .12s,color .12s;margin-left:4px;}
+.sch-grp-faint:hover{color:#3b82f6;border-color:#93c5fd;}
+.sch-grp-row{border:1px solid #bfdbfe;border-top:none;border-radius:0 0 4px 4px;padding:4px;background:#fff;display:flex;flex-wrap:wrap;gap:3px;}
+#eq-tip,#grp-tip{position:fixed;display:none;z-index:9999;background:#1e293b;color:#f1f5f9;border-radius:8px;padding:10px 14px;font-size:12px;pointer-events:none;min-width:210px;box-shadow:0 4px 20px rgba(0,0,0,.4);}
+#btn-fs:hover{background:#dbeafe !important;}
+#scheme-fs .fs-fbtn{padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-weight:600;transition:background .12s;}
+#scheme-fs .fs-fbtn:hover,#scheme-fs .fs-fbtn.active{background:rgba(255,255,255,.32);}
 </style>
 </head>
 <body>
@@ -265,7 +291,7 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex
     <div class="site-header">
       <div>
         <div class="site-title">Участок 5 Озеро</div>
-        <div class="site-subtitle">100 бассейнов · 4 группы · 142 датчика онлайн</div>
+        <div class="site-subtitle">130 бассейнов · 5 групп · 142 датчика онлайн</div>
       </div>
       <div class="site-kpis">
         <div class="skpi"><div class="skpi-val ok">9.4</div><div class="skpi-lbl">O₂ мг/л</div></div>
@@ -295,6 +321,10 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex
         <div class="leg-item"><div class="leg-dot leg-warn"></div> Внимание</div>
         <div class="leg-item"><div class="leg-dot leg-alarm"></div> Авария</div>
       </div>
+      <button id="btn-fs" onclick="openFS()" style="display:flex;align-items:center;gap:5px;padding:5px 12px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:7px;font-size:12px;color:#1e3a8a;cursor:pointer;font-weight:600;flex-shrink:0;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        Полный экран
+      </button>
     </div>
 
     <!-- CARDS VIEW -->
@@ -304,7 +334,7 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex
     <div id="view-scheme">
       <div class="filter-bar" id="schemeFilters">
         <button class="filter-btn active-all" id="fAll"   onclick="applyFilter('all')">
-          <span>Все бассейны</span><span class="filter-count" id="fc-all">100</span>
+          <span>Все бассейны</span><span class="filter-count" id="fc-all">130</span>
         </button>
         <div class="filter-divider"></div>
         <button class="filter-btn" id="fAlarm" onclick="applyFilter('alarm')">
@@ -321,22 +351,36 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex
         </button>
         <div class="filter-divider"></div>
         <button class="filter-btn" id="fFeed"  onclick="applyFilter('feed')">
-          🟢 Кормушка вкл
+          Кормушка вкл
         </button>
         <button class="filter-btn" id="fNoFeed" onclick="applyFilter('nofeed')">
-          ⚪ Кормушка выкл
+          Кормушка выкл
         </button>
         <div class="filter-divider"></div>
         <button class="filter-btn" id="fLowO2" onclick="applyFilter('lowo2')">
-          📉 O₂ &lt; 8.0
+          O₂ &lt; 8.0
         </button>
         <button class="filter-btn" id="fHighPh" onclick="applyFilter('highph')">
-          ⚗️ pH &gt; 7.1
+          pH &gt; 7.1
         </button>
       </div>
       <div class="scheme-container" id="schemeContainer"></div>
     </div>
   </div>
+  <div id="eq-tip"></div>
+  <div id="grp-tip"></div>
+  <div id="scheme-fs" style="display:none;position:fixed;inset:0;z-index:6000;background:#f0f6ff;overflow:auto;">
+    <div style="position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:10px 18px;background:#1e3a8a;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2);">
+      <span style="font-size:14px;font-weight:700;">5 Озеро — Схема бассейнов</span>
+      <div id="fs-filter-bar" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      <button onclick="closeFS()" style="display:flex;align-items:center;gap:5px;padding:6px 14px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:6px;color:#fff;font-size:13px;cursor:pointer;font-weight:600;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        Свернуть
+      </button>
+    </div>
+    <div style="padding:14px 18px;"><div class="scheme-container" id="fs-scheme-cont"></div></div>
+  </div>
+
 </main>
 
 <!-- TOOLTIP -->
@@ -344,125 +388,127 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex
   <div class="tt-title" id="tt-title"></div>
   <div class="tt-row"><span>O₂</span><span class="tt-val" id="tt-o2"></span></div>
   <div class="tt-row"><span>Темп.</span><span class="tt-val" id="tt-temp"></span></div>
-  <div class="tt-row"><span>pH</span><span class="tt-val" id="tt-ph"></span></div>
-  <div class="tt-row"><span>NH4</span><span class="tt-val" id="tt-nh4"></span></div>
+  <div class="tt-divider" style="height:1px;background:#334155;margin:5px 0;opacity:.3"></div>
   <div class="tt-row"><span>Кормушка</span><span class="tt-val" id="tt-feed"></span></div>
+  <div class="tt-row"><span>Время работы</span><span class="tt-val" id="tt-feedtime"></span></div>
+  <div class="tt-row"><span>Кормлений</span><span class="tt-val" id="tt-feedcount"></span></div>
 </div>
 
 <script>
 const BASINS = {
-  1: {num:1, o2:9.7, temp:7.8, ph:6.9, nh4:0.05, feeder:true, status:"ok"},
-  2: {num:2, o2:9.7, temp:8.5, ph:6.8, nh4:0.06, feeder:false, status:"ok"},
-  3: {num:3, o2:9.1, temp:8.2, ph:6.8, nh4:0.05, feeder:true, status:"ok"},
-  4: {num:4, o2:9.6, temp:8.0, ph:7.1, nh4:0.08, feeder:false, status:"ok"},
-  5: {num:5, o2:9.9, temp:8.4, ph:7.0, nh4:0.05, feeder:true, status:"ok"},
-  6: {num:6, o2:9.3, temp:7.9, ph:6.8, nh4:0.08, feeder:true, status:"ok"},
-  7: {num:7, o2:7.6, temp:8.4, ph:7.1, nh4:0.09, feeder:true, status:"warn"},
-  8: {num:8, o2:7.2, temp:8.3, ph:7.2, nh4:0.07, feeder:true, status:"warn"},
-  9: {num:9, o2:9.1, temp:8.0, ph:6.8, nh4:0.05, feeder:false, status:"ok"},
-  10: {num:10, o2:9.2, temp:8.3, ph:7.0, nh4:0.06, feeder:false, status:"ok"},
-  11: {num:11, o2:9.2, temp:8.5, ph:7.1, nh4:0.07, feeder:false, status:"ok"},
-  12: {num:12, o2:9.8, temp:7.9, ph:7.0, nh4:0.09, feeder:true, status:"ok"},
-  13: {num:13, o2:9.6, temp:8.3, ph:7.2, nh4:0.08, feeder:false, status:"ok"},
-  14: {num:14, o2:8.8, temp:8.1, ph:6.9, nh4:0.05, feeder:true, status:"ok"},
-  15: {num:15, o2:10.0, temp:8.1, ph:7.1, nh4:0.06, feeder:true, status:"ok"},
-  16: {num:16, o2:9.4, temp:8.0, ph:6.9, nh4:0.07, feeder:true, status:"ok"},
-  17: {num:17, o2:9.6, temp:8.5, ph:7.0, nh4:0.05, feeder:true, status:"ok"},
-  18: {num:18, o2:9.5, temp:7.9, ph:6.8, nh4:0.05, feeder:true, status:"ok"},
-  19: {num:19, o2:9.9, temp:8.1, ph:6.8, nh4:0.06, feeder:true, status:"ok"},
-  20: {num:20, o2:9.5, temp:8.6, ph:7.2, nh4:0.04, feeder:true, status:"ok"},
-  21: {num:21, o2:9.8, temp:8.2, ph:6.9, nh4:0.07, feeder:false, status:"ok"},
-  22: {num:22, o2:9.4, temp:8.2, ph:7.3, nh4:0.08, feeder:true, status:"ok"},
-  23: {num:23, o2:9.5, temp:7.9, ph:7.3, nh4:0.08, feeder:true, status:"ok"},
-  24: {num:24, o2:9.7, temp:8.3, ph:6.9, nh4:0.08, feeder:true, status:"ok"},
-  25: {num:25, o2:9.9, temp:8.2, ph:6.8, nh4:0.06, feeder:false, status:"ok"},
-  26: {num:26, o2:10.1, temp:8.5, ph:7.2, nh4:0.06, feeder:false, status:"ok"},
-  27: {num:27, o2:10.0, temp:8.6, ph:6.8, nh4:0.06, feeder:false, status:"ok"},
-  28: {num:28, o2:9.9, temp:8.4, ph:6.9, nh4:0.06, feeder:true, status:"ok"},
-  29: {num:29, o2:9.2, temp:8.5, ph:7.0, nh4:0.05, feeder:true, status:"ok"},
-  30: {num:30, o2:9.8, temp:8.0, ph:7.0, nh4:0.09, feeder:true, status:"ok"},
-  31: {num:31, o2:9.4, temp:8.2, ph:6.9, nh4:0.05, feeder:true, status:"ok"},
-  32: {num:32, o2:9.6, temp:8.0, ph:6.9, nh4:0.04, feeder:true, status:"ok"},
-  33: {num:33, o2:9.1, temp:8.5, ph:7.2, nh4:0.04, feeder:false, status:"ok"},
-  34: {num:34, o2:7.5, temp:8.0, ph:6.9, nh4:0.09, feeder:true, status:"warn"},
-  35: {num:35, o2:9.9, temp:8.4, ph:6.9, nh4:0.04, feeder:true, status:"ok"},
-  36: {num:36, o2:9.4, temp:8.2, ph:7.2, nh4:0.07, feeder:true, status:"ok"},
-  37: {num:37, o2:8.9, temp:8.1, ph:7.0, nh4:0.08, feeder:false, status:"ok"},
-  38: {num:38, o2:9.1, temp:8.2, ph:7.0, nh4:0.05, feeder:false, status:"ok"},
-  39: {num:39, o2:10.1, temp:8.2, ph:7.2, nh4:0.07, feeder:false, status:"ok"},
-  40: {num:40, o2:10.2, temp:8.5, ph:7.3, nh4:0.09, feeder:true, status:"ok"},
-  41: {num:41, o2:9.0, temp:8.2, ph:6.9, nh4:0.06, feeder:false, status:"ok"},
-  42: {num:42, o2:9.3, temp:8.6, ph:6.9, nh4:0.08, feeder:true, status:"ok"},
-  43: {num:43, o2:9.4, temp:8.6, ph:7.3, nh4:0.07, feeder:true, status:"ok"},
-  44: {num:44, o2:9.0, temp:8.0, ph:7.3, nh4:0.07, feeder:true, status:"ok"},
-  45: {num:45, o2:5.6, temp:7.8, ph:7.1, nh4:0.07, feeder:true, status:"alarm"},
-  46: {num:46, o2:10.1, temp:7.9, ph:6.9, nh4:0.07, feeder:true, status:"ok"},
-  47: {num:47, o2:9.1, temp:7.9, ph:7.2, nh4:0.05, feeder:true, status:"ok"},
-  48: {num:48, o2:9.7, temp:8.1, ph:7.1, nh4:0.07, feeder:true, status:"ok"},
-  49: {num:49, o2:9.1, temp:8.4, ph:6.9, nh4:0.06, feeder:true, status:"ok"},
-  50: {num:50, o2:9.2, temp:8.1, ph:7.2, nh4:0.04, feeder:true, status:"ok"},
-  51: {num:51, o2:10.2, temp:8.6, ph:6.8, nh4:0.05, feeder:true, status:"ok"},
-  52: {num:52, o2:10.1, temp:8.5, ph:7.2, nh4:0.06, feeder:false, status:"ok"},
-  53: {num:53, o2:10.0, temp:8.4, ph:7.1, nh4:0.09, feeder:true, status:"ok"},
-  54: {num:54, o2:8.8, temp:8.5, ph:6.9, nh4:0.07, feeder:true, status:"ok"},
-  55: {num:55, o2:9.0, temp:7.9, ph:6.9, nh4:0.07, feeder:true, status:"ok"},
-  56: {num:56, o2:9.6, temp:8.4, ph:6.9, nh4:0.07, feeder:true, status:"ok"},
-  57: {num:57, o2:9.5, temp:8.5, ph:7.2, nh4:0.04, feeder:true, status:"ok"},
-  58: {num:58, o2:9.2, temp:7.8, ph:7.2, nh4:0.07, feeder:true, status:"ok"},
-  59: {num:59, o2:9.8, temp:8.2, ph:7.0, nh4:0.04, feeder:false, status:"ok"},
-  60: {num:60, o2:10.0, temp:8.5, ph:7.1, nh4:0.08, feeder:true, status:"ok"},
-  61: {num:61, o2:9.0, temp:7.9, ph:7.0, nh4:0.08, feeder:true, status:"ok"},
-  62: {num:62, o2:10.0, temp:8.5, ph:6.9, nh4:0.05, feeder:false, status:"ok"},
-  63: {num:63, o2:9.9, temp:8.5, ph:7.0, nh4:0.07, feeder:false, status:"ok"},
-  64: {num:64, o2:10.1, temp:8.5, ph:7.3, nh4:0.08, feeder:true, status:"ok"},
-  65: {num:65, o2:8.8, temp:8.4, ph:7.0, nh4:0.09, feeder:true, status:"ok"},
-  66: {num:66, o2:10.0, temp:8.4, ph:6.9, nh4:0.08, feeder:false, status:"ok"},
-  67: {num:67, o2:7.4, temp:8.5, ph:6.9, nh4:0.08, feeder:true, status:"warn"},
-  68: {num:68, o2:9.9, temp:8.0, ph:6.8, nh4:0.05, feeder:true, status:"ok"},
-  69: {num:69, o2:10.0, temp:8.6, ph:6.9, nh4:0.07, feeder:true, status:"ok"},
-  70: {num:70, o2:10.2, temp:8.2, ph:7.3, nh4:0.05, feeder:true, status:"ok"},
-  71: {num:71, o2:9.0, temp:8.6, ph:6.9, nh4:0.05, feeder:true, status:"ok"},
-  72: {num:72, o2:9.8, temp:8.1, ph:7.1, nh4:0.07, feeder:true, status:"ok"},
-  73: {num:73, o2:9.6, temp:8.0, ph:7.2, nh4:0.04, feeder:true, status:"ok"},
-  74: {num:74, o2:9.6, temp:8.4, ph:7.2, nh4:0.07, feeder:true, status:"ok"},
-  75: {num:75, o2:8.9, temp:8.3, ph:7.0, nh4:0.06, feeder:true, status:"ok"},
-  76: {num:76, o2:9.8, temp:8.0, ph:7.0, nh4:0.06, feeder:true, status:"ok"},
-  77: {num:77, o2:9.2, temp:7.9, ph:7.0, nh4:0.09, feeder:true, status:"ok"},
-  78: {num:78, o2:10.1, temp:8.3, ph:7.0, nh4:0.07, feeder:false, status:"ok"},
-  79: {num:79, o2:9.2, temp:8.1, ph:7.1, nh4:0.07, feeder:true, status:"ok"},
-  80: {num:80, o2:9.4, temp:8.0, ph:7.0, nh4:0.09, feeder:true, status:"ok"},
-  81: {num:81, o2:9.0, temp:7.9, ph:7.1, nh4:0.07, feeder:true, status:"ok"},
-  82: {num:82, o2:9.9, temp:8.4, ph:7.1, nh4:0.05, feeder:false, status:"ok"},
-  83: {num:83, o2:8.8, temp:8.0, ph:7.0, nh4:0.08, feeder:false, status:"ok"},
-  84: {num:84, o2:9.4, temp:8.3, ph:6.9, nh4:0.07, feeder:true, status:"ok"},
-  85: {num:85, o2:9.1, temp:8.3, ph:6.8, nh4:0.08, feeder:true, status:"ok"},
-  86: {num:86, o2:8.9, temp:8.1, ph:6.9, nh4:0.09, feeder:true, status:"ok"},
-  87: {num:87, o2:8.9, temp:8.0, ph:7.2, nh4:0.06, feeder:true, status:"ok"},
-  88: {num:88, o2:9.7, temp:8.6, ph:7.1, nh4:0.09, feeder:true, status:"ok"},
-  89: {num:89, o2:7.8, temp:8.4, ph:7.1, nh4:0.08, feeder:true, status:"warn"},
-  90: {num:90, o2:9.8, temp:8.2, ph:6.9, nh4:0.05, feeder:true, status:"ok"},
-  91: {num:91, o2:9.9, temp:8.2, ph:7.1, nh4:0.05, feeder:false, status:"ok"},
-  92: {num:92, o2:9.2, temp:8.0, ph:7.0, nh4:0.07, feeder:false, status:"ok"},
-  93: {num:93, o2:9.1, temp:8.4, ph:7.2, nh4:0.04, feeder:true, status:"ok"},
-  94: {num:94, o2:9.6, temp:8.1, ph:6.9, nh4:0.06, feeder:true, status:"ok"},
-  95: {num:95, o2:9.6, temp:8.4, ph:7.2, nh4:0.08, feeder:true, status:"ok"},
-  96: {num:96, o2:8.8, temp:8.1, ph:7.2, nh4:0.08, feeder:true, status:"ok"},
-  97: {num:97, o2:9.4, temp:8.4, ph:7.1, nh4:0.07, feeder:false, status:"ok"},
-  98: {num:98, o2:9.1, temp:8.1, ph:6.8, nh4:0.06, feeder:true, status:"ok"},
-  99: {num:99, o2:9.4, temp:7.9, ph:7.0, nh4:0.05, feeder:true, status:"ok"},
-  100: {num:100, o2:8.8, temp:8.1, ph:7.1, nh4:0.04, feeder:true, status:"ok"},
+  1: {num:1, o2:9.7, temp:7.8, ph:6.9, nh4:0.05, feeder:true, feedTime:"6ч 43м", feedCount:6, status:"ok"},
+  2: {num:2, o2:9.7, temp:8.5, ph:6.8, nh4:0.06, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  3: {num:3, o2:9.1, temp:8.2, ph:6.8, nh4:0.05, feeder:true, feedTime:"1ч 25м", feedCount:4, status:"ok"},
+  4: {num:4, o2:9.6, temp:8.0, ph:7.1, nh4:0.08, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  5: {num:5, o2:9.9, temp:8.4, ph:7.0, nh4:0.05, feeder:true, feedTime:"1ч 50м", feedCount:13, status:"ok"},
+  6: {num:6, o2:9.3, temp:7.9, ph:6.8, nh4:0.08, feeder:true, feedTime:"2ч 44м", feedCount:13, status:"ok"},
+  7: {num:7, o2:7.6, temp:8.4, ph:7.1, nh4:0.09, feeder:true, feedTime:"3ч 36м", feedCount:4, status:"warn"},
+  8: {num:8, o2:7.2, temp:8.3, ph:7.2, nh4:0.07, feeder:true, feedTime:"2ч 58м", feedCount:9, status:"warn"},
+  9: {num:9, o2:9.1, temp:8.0, ph:6.8, nh4:0.05, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  10: {num:10, o2:9.2, temp:8.3, ph:7.0, nh4:0.06, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  11: {num:11, o2:9.2, temp:8.5, ph:7.1, nh4:0.07, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  12: {num:12, o2:9.8, temp:7.9, ph:7.0, nh4:0.09, feeder:true, feedTime:"5ч 39м", feedCount:11, status:"ok"},
+  13: {num:13, o2:9.6, temp:8.3, ph:7.2, nh4:0.08, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  14: {num:14, o2:8.8, temp:8.1, ph:6.9, nh4:0.05, feeder:true, feedTime:"4ч 52м", feedCount:8, status:"ok"},
+  15: {num:15, o2:10.0, temp:8.1, ph:7.1, nh4:0.06, feeder:true, feedTime:"4ч 41м", feedCount:11, status:"ok"},
+  16: {num:16, o2:9.4, temp:8.0, ph:6.9, nh4:0.07, feeder:true, feedTime:"1ч 40м", feedCount:9, status:"ok"},
+  17: {num:17, o2:9.6, temp:8.5, ph:7.0, nh4:0.05, feeder:true, feedTime:"6ч 42м", feedCount:7, status:"ok"},
+  18: {num:18, o2:9.5, temp:7.9, ph:6.8, nh4:0.05, feeder:true, feedTime:"6ч 34м", feedCount:5, status:"ok"},
+  19: {num:19, o2:9.9, temp:8.1, ph:6.8, nh4:0.06, feeder:true, feedTime:"3ч 32м", feedCount:8, status:"ok"},
+  20: {num:20, o2:9.5, temp:8.6, ph:7.2, nh4:0.04, feeder:true, feedTime:"2ч 01м", feedCount:11, status:"ok"},
+  21: {num:21, o2:9.8, temp:8.2, ph:6.9, nh4:0.07, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  22: {num:22, o2:9.4, temp:8.2, ph:7.3, nh4:0.08, feeder:true, feedTime:"4ч 30м", feedCount:5, status:"ok"},
+  23: {num:23, o2:9.5, temp:7.9, ph:7.3, nh4:0.08, feeder:true, feedTime:"4ч 58м", feedCount:12, status:"ok"},
+  24: {num:24, o2:9.7, temp:8.3, ph:6.9, nh4:0.08, feeder:true, feedTime:"2ч 57м", feedCount:4, status:"ok"},
+  25: {num:25, o2:9.9, temp:8.2, ph:6.8, nh4:0.06, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  26: {num:26, o2:10.1, temp:8.5, ph:7.2, nh4:0.06, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  27: {num:27, o2:10.0, temp:8.6, ph:6.8, nh4:0.06, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  28: {num:28, o2:9.9, temp:8.4, ph:6.9, nh4:0.06, feeder:true, feedTime:"3ч 38м", feedCount:10, status:"ok"},
+  29: {num:29, o2:9.2, temp:8.5, ph:7.0, nh4:0.05, feeder:true, feedTime:"6ч 53м", feedCount:10, status:"ok"},
+  30: {num:30, o2:9.8, temp:8.0, ph:7.0, nh4:0.09, feeder:true, feedTime:"1ч 05м", feedCount:10, status:"ok"},
+  31: {num:31, o2:9.4, temp:8.2, ph:6.9, nh4:0.05, feeder:true, feedTime:"2ч 43м", feedCount:8, status:"ok"},
+  32: {num:32, o2:9.6, temp:8.0, ph:6.9, nh4:0.04, feeder:true, feedTime:"3ч 10м", feedCount:12, status:"ok"},
+  33: {num:33, o2:9.1, temp:8.5, ph:7.2, nh4:0.04, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  34: {num:34, o2:7.5, temp:8.0, ph:6.9, nh4:0.09, feeder:true, feedTime:"2ч 13м", feedCount:7, status:"warn"},
+  35: {num:35, o2:9.9, temp:8.4, ph:6.9, nh4:0.04, feeder:true, feedTime:"5ч 42м", feedCount:5, status:"ok"},
+  36: {num:36, o2:9.4, temp:8.2, ph:7.2, nh4:0.07, feeder:true, feedTime:"1ч 00м", feedCount:14, status:"ok"},
+  37: {num:37, o2:8.9, temp:8.1, ph:7.0, nh4:0.08, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  38: {num:38, o2:9.1, temp:8.2, ph:7.0, nh4:0.05, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  39: {num:39, o2:10.1, temp:8.2, ph:7.2, nh4:0.07, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  40: {num:40, o2:10.2, temp:8.5, ph:7.3, nh4:0.09, feeder:true, feedTime:"4ч 50м", feedCount:9, status:"ok"},
+  41: {num:41, o2:9.0, temp:8.2, ph:6.9, nh4:0.06, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  42: {num:42, o2:9.3, temp:8.6, ph:6.9, nh4:0.08, feeder:true, feedTime:"4ч 01м", feedCount:11, status:"ok"},
+  43: {num:43, o2:9.4, temp:8.6, ph:7.3, nh4:0.07, feeder:true, feedTime:"4ч 35м", feedCount:8, status:"ok"},
+  44: {num:44, o2:9.0, temp:8.0, ph:7.3, nh4:0.07, feeder:true, feedTime:"3ч 25м", feedCount:11, status:"ok"},
+  45: {num:45, o2:5.6, temp:7.8, ph:7.1, nh4:0.07, feeder:true, feedTime:"1ч 29м", feedCount:12, status:"alarm"},
+  46: {num:46, o2:10.1, temp:7.9, ph:6.9, nh4:0.07, feeder:true, feedTime:"2ч 56м", feedCount:13, status:"ok"},
+  47: {num:47, o2:9.1, temp:7.9, ph:7.2, nh4:0.05, feeder:true, feedTime:"4ч 42м", feedCount:6, status:"ok"},
+  48: {num:48, o2:9.7, temp:8.1, ph:7.1, nh4:0.07, feeder:true, feedTime:"3ч 21м", feedCount:7, status:"ok"},
+  49: {num:49, o2:9.1, temp:8.4, ph:6.9, nh4:0.06, feeder:true, feedTime:"4ч 20м", feedCount:10, status:"ok"},
+  50: {num:50, o2:9.2, temp:8.1, ph:7.2, nh4:0.04, feeder:true, feedTime:"5ч 20м", feedCount:8, status:"ok"},
+  51: {num:51, o2:10.2, temp:8.6, ph:6.8, nh4:0.05, feeder:true, feedTime:"5ч 22м", feedCount:7, status:"ok"},
+  52: {num:52, o2:10.1, temp:8.5, ph:7.2, nh4:0.06, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  53: {num:53, o2:10.0, temp:8.4, ph:7.1, nh4:0.09, feeder:true, feedTime:"2ч 53м", feedCount:7, status:"ok"},
+  54: {num:54, o2:8.8, temp:8.5, ph:6.9, nh4:0.07, feeder:true, feedTime:"5ч 44м", feedCount:8, status:"ok"},
+  55: {num:55, o2:9.0, temp:7.9, ph:6.9, nh4:0.07, feeder:true, feedTime:"5ч 44м", feedCount:6, status:"ok"},
+  56: {num:56, o2:9.6, temp:8.4, ph:6.9, nh4:0.07, feeder:true, feedTime:"4ч 51м", feedCount:6, status:"ok"},
+  57: {num:57, o2:9.5, temp:8.5, ph:7.2, nh4:0.04, feeder:true, feedTime:"1ч 11м", feedCount:9, status:"ok"},
+  58: {num:58, o2:9.2, temp:7.8, ph:7.2, nh4:0.07, feeder:true, feedTime:"2ч 39м", feedCount:14, status:"ok"},
+  59: {num:59, o2:9.8, temp:8.2, ph:7.0, nh4:0.04, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  60: {num:60, o2:10.0, temp:8.5, ph:7.1, nh4:0.08, feeder:true, feedTime:"3ч 30м", feedCount:14, status:"ok"},
+  61: {num:61, o2:9.0, temp:7.9, ph:7.0, nh4:0.08, feeder:true, feedTime:"6ч 31м", feedCount:13, status:"ok"},
+  62: {num:62, o2:10.0, temp:8.5, ph:6.9, nh4:0.05, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  63: {num:63, o2:9.9, temp:8.5, ph:7.0, nh4:0.07, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  64: {num:64, o2:10.1, temp:8.5, ph:7.3, nh4:0.08, feeder:true, feedTime:"5ч 50м", feedCount:5, status:"ok"},
+  65: {num:65, o2:8.8, temp:8.4, ph:7.0, nh4:0.09, feeder:true, feedTime:"5ч 03м", feedCount:10, status:"ok"},
+  66: {num:66, o2:10.0, temp:8.4, ph:6.9, nh4:0.08, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  67: {num:67, o2:7.4, temp:8.5, ph:6.9, nh4:0.08, feeder:true, feedTime:"5ч 36м", feedCount:8, status:"warn"},
+  68: {num:68, o2:9.9, temp:8.0, ph:6.8, nh4:0.05, feeder:true, feedTime:"6ч 25м", feedCount:8, status:"ok"},
+  69: {num:69, o2:10.0, temp:8.6, ph:6.9, nh4:0.07, feeder:true, feedTime:"6ч 57м", feedCount:13, status:"ok"},
+  70: {num:70, o2:10.2, temp:8.2, ph:7.3, nh4:0.05, feeder:true, feedTime:"5ч 32м", feedCount:5, status:"ok"},
+  71: {num:71, o2:9.0, temp:8.6, ph:6.9, nh4:0.05, feeder:true, feedTime:"5ч 51м", feedCount:5, status:"ok"},
+  72: {num:72, o2:9.8, temp:8.1, ph:7.1, nh4:0.07, feeder:true, feedTime:"5ч 15м", feedCount:12, status:"ok"},
+  73: {num:73, o2:9.6, temp:8.0, ph:7.2, nh4:0.04, feeder:true, feedTime:"6ч 25м", feedCount:6, status:"ok"},
+  74: {num:74, o2:9.6, temp:8.4, ph:7.2, nh4:0.07, feeder:true, feedTime:"4ч 59м", feedCount:14, status:"ok"},
+  75: {num:75, o2:8.9, temp:8.3, ph:7.0, nh4:0.06, feeder:true, feedTime:"5ч 06м", feedCount:9, status:"ok"},
+  76: {num:76, o2:9.8, temp:8.0, ph:7.0, nh4:0.06, feeder:true, feedTime:"2ч 52м", feedCount:8, status:"ok"},
+  77: {num:77, o2:9.2, temp:7.9, ph:7.0, nh4:0.09, feeder:true, feedTime:"5ч 28м", feedCount:9, status:"ok"},
+  78: {num:78, o2:10.1, temp:8.3, ph:7.0, nh4:0.07, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  79: {num:79, o2:9.2, temp:8.1, ph:7.1, nh4:0.07, feeder:true, feedTime:"1ч 40м", feedCount:5, status:"ok"},
+  80: {num:80, o2:9.4, temp:8.0, ph:7.0, nh4:0.09, feeder:true, feedTime:"1ч 16м", feedCount:10, status:"ok"},
+  81: {num:81, o2:9.0, temp:7.9, ph:7.1, nh4:0.07, feeder:true, feedTime:"2ч 12м", feedCount:4, status:"ok"},
+  82: {num:82, o2:9.9, temp:8.4, ph:7.1, nh4:0.05, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  83: {num:83, o2:8.8, temp:8.0, ph:7.0, nh4:0.08, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  84: {num:84, o2:9.4, temp:8.3, ph:6.9, nh4:0.07, feeder:true, feedTime:"4ч 15м", feedCount:7, status:"ok"},
+  85: {num:85, o2:9.1, temp:8.3, ph:6.8, nh4:0.08, feeder:true, feedTime:"3ч 04м", feedCount:8, status:"ok"},
+  86: {num:86, o2:8.9, temp:8.1, ph:6.9, nh4:0.09, feeder:true, feedTime:"2ч 48м", feedCount:9, status:"ok"},
+  87: {num:87, o2:8.9, temp:8.0, ph:7.2, nh4:0.06, feeder:true, feedTime:"3ч 49м", feedCount:12, status:"ok"},
+  88: {num:88, o2:9.7, temp:8.6, ph:7.1, nh4:0.09, feeder:true, feedTime:"2ч 38м", feedCount:7, status:"ok"},
+  89: {num:89, o2:7.8, temp:8.4, ph:7.1, nh4:0.08, feeder:true, feedTime:"2ч 14м", feedCount:6, status:"warn"},
+  90: {num:90, o2:9.8, temp:8.2, ph:6.9, nh4:0.05, feeder:true, feedTime:"4ч 17м", feedCount:12, status:"ok"},
+  91: {num:91, o2:9.9, temp:8.2, ph:7.1, nh4:0.05, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  92: {num:92, o2:9.2, temp:8.0, ph:7.0, nh4:0.07, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  93: {num:93, o2:9.1, temp:8.4, ph:7.2, nh4:0.04, feeder:true, feedTime:"5ч 07м", feedCount:4, status:"ok"},
+  94: {num:94, o2:9.6, temp:8.1, ph:6.9, nh4:0.06, feeder:true, feedTime:"2ч 27м", feedCount:12, status:"ok"},
+  95: {num:95, o2:9.6, temp:8.4, ph:7.2, nh4:0.08, feeder:true, feedTime:"1ч 34м", feedCount:9, status:"ok"},
+  96: {num:96, o2:8.8, temp:8.1, ph:7.2, nh4:0.08, feeder:true, feedTime:"4ч 23м", feedCount:6, status:"ok"},
+  97: {num:97, o2:9.4, temp:8.4, ph:7.1, nh4:0.07, feeder:false, feedTime:"—", feedCount:0, status:"ok"},
+  98: {num:98, o2:9.1, temp:8.1, ph:6.8, nh4:0.06, feeder:true, feedTime:"2ч 10м", feedCount:14, status:"ok"},
+  99: {num:99, o2:9.4, temp:7.9, ph:7.0, nh4:0.05, feeder:true, feedTime:"3ч 37м", feedCount:7, status:"ok"},
+  100: {num:100, o2:8.8, temp:8.1, ph:7.1, nh4:0.04, feeder:true, feedTime:"5ч 08м", feedCount:12, status:"ok"},
 };
 
 // ── TOOLTIP ──
 const tip = document.getElementById('tooltip');
 function showTooltip(e, b) {
+  moveTooltip(e);
   tip.style.display = 'block';
   document.getElementById('tt-title').textContent = 'Бассейн Б-' + String(b.num).padStart(2,'0');
   document.getElementById('tt-o2').textContent   = b.o2 + ' мг/л';
   document.getElementById('tt-temp').textContent = b.temp + ' °C';
-  document.getElementById('tt-ph').textContent   = b.ph;
-  document.getElementById('tt-nh4').textContent  = b.nh4 + ' мг/л';
   document.getElementById('tt-feed').textContent = b.feeder ? '✓ Вкл' : '— Выкл';
+  document.getElementById('tt-feedtime').textContent = b.feedTime || '—';
+  document.getElementById('tt-feedcount').textContent = b.feedCount ? b.feedCount + ' раз' : '0 раз';
   moveTooltip(e);
 }
 function moveTooltip(e) {
@@ -476,10 +522,11 @@ function buildCards() {
   const wrap = document.getElementById('view-cards');
   wrap.innerHTML = '';
   const groups = [
+    {id:'g25',  label:'Группа A_01–25', nums: Array.from({length:25},(_,i)=>1+i)},
+    {id:'g50',  label:'Группа A_26–50', nums: Array.from({length:25},(_,i)=>26+i)},
+    {id:'g75',  label:'Группа A_51–75', nums: Array.from({length:25},(_,i)=>51+i)},
     {id:'g100', label:'Группа A_76–100', nums: Array.from({length:25},(_,i)=>76+i)},
-    {id:'g75',  label:'Группа A_51–75',  nums: Array.from({length:25},(_,i)=>51+i)},
-    {id:'g50',  label:'Группа A_26–50',  nums: Array.from({length:25},(_,i)=>26+i)},
-    {id:'g25',  label:'Группа A_01–25',  nums: Array.from({length:25},(_,i)=>1+i)},
+    {id:'g130', label:'Группа 101–130', nums: Array.from({length:30},(_,i)=>101+i)},
   ];
   groups.forEach(g => {
     const alarms = g.nums.filter(n=>BASINS[n]?.status==='alarm').length;
@@ -502,91 +549,216 @@ function buildCards() {
     wrap.appendChild(block);
     const body = document.getElementById('body-' + g.id);
     g.nums.forEach(n => {
-      const b = BASINS[n]; if (!b) return;
+      const b = BASINS[n] || {num:n,o2:'—',temp:'—',feeder:false,status:'ok'};
       const card = document.createElement('div');
       card.className = 'basin-card ' + b.status;
       card.onclick = () => openBasin(n);
       card.innerHTML = `
         <div class="bc-num">Б-${String(n).padStart(2,'0')}</div>
-        <div class="bc-row"><span class="bc-key">O₂</span><span class="bc-val ${b.status}">${b.o2} мг/л</span></div>
-        <div class="bc-row"><span class="bc-key">Темп.</span><span class="bc-val">${b.temp} °C</span></div>
-        <div class="bc-row"><span class="bc-key">pH</span><span class="bc-val">${b.ph}</span></div>
-        <div class="bc-row"><span class="bc-key">NH4</span><span class="bc-val">${b.nh4}</span></div>
-        <div class="bc-feeder"><div class="feeder-dot ${b.feeder?'':'off'}"></div>${b.feeder?'Кормушка вкл':'Кормушка выкл'}</div>`;
+        <div class="bc-row"><span class="bc-key">O₂</span><span class="bc-val ${b.status}">${b.o2==='—'?'—':b.o2+' мг/л'}</span></div>
+        <div class="bc-row"><span class="bc-key">Темп.</span><span class="bc-val">${b.temp==='—'?'—':b.temp+' °C'}</span></div>
+        <div class="bc-feeder"><div class="feeder-dot ${b.feeder?'':'off'}"></div>${b.feeder?'Вкл · '+(b.feedTime||'—')+' · '+(b.feedCount||0)+' корм.':'Выкл'}</div>`;
       body.appendChild(card);
     });
   });
 
-  // feeder count
-  const on = Object.values(BASINS).filter(b=>b.feeder&&b.num<=100).length;
-  document.getElementById('feedersKpi').textContent = on + '/100';
+  const on = Object.values(BASINS).filter(b=>b.feeder&&b.num<=130).length;
+  document.getElementById('feedersKpi').textContent = on + '/130';
 }
 
 function toggleGroup2(id) {
   document.getElementById(id).classList.toggle('collapsed');
 }
 
-// ── SCHEME VIEW ── (pure HTML divs, no SVG, no width measurement)
+// ── SCHEME VIEW ──
 function buildScheme() {
-  const c = document.getElementById('schemeContainer');
+  _buildSchemeInto(document.getElementById('schemeContainer'));
+}
+
+function _buildSchemeInto(c) {
   c.innerHTML = '';
 
+  var eqTip  = document.getElementById('eq-tip');
+  var grpTip = document.getElementById('grp-tip');
+
+  function getB(n) {
+    return BASINS[n] || {num:n,o2:'—',temp:'—',ph:'—',nh4:'—',feeder:false,feedTime:'—',feedCount:0,status:'ok'};
+  }
+  function gVals(nums) {
+    var arr = nums.map(function(n){return BASINS[n];}).filter(Boolean);
+    if (!arr.length) return {o2:'—',temp:'—',ph:'—',nh4:'—'};
+    function avg(k){return (arr.reduce(function(s,b){return s+(+b[k]||0);},0)/arr.length).toFixed(1);}
+    return {o2:avg('o2'),temp:avg('temp'),ph:avg('ph'),
+            nh4:(arr.reduce(function(s,b){return s+(+b.nh4||0);},0)/arr.length).toFixed(2)};
+  }
+
+  function posTip(tip, e) {
+    var tw=tip.offsetWidth||210, th=tip.offsetHeight||80;
+    var x=e.clientX+14, y=e.clientY-10;
+    if(x+tw>window.innerWidth-8)  x=e.clientX-tw-14;
+    if(y+th>window.innerHeight-8) y=window.innerHeight-th-8;
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+  }
+  function tRow(k,v){
+    return '<div style="display:flex;justify-content:space-between;gap:14px;margin-bottom:3px">'
+      +'<span style="color:#94a3b8">'+k+'</span>'
+      +'<span style="color:#7dd3fc;font-weight:600">'+v+'</span></div>';
+  }
+  function tHead(t){
+    return '<div style="font-weight:700;font-size:13px;margin-bottom:6px;border-bottom:1px solid #334155;padding-bottom:5px;color:#fff">'+t+'</div>';
+  }
+
+  function bindEq(el, title, rows) {
+    el.addEventListener('mouseenter', function(e) {
+      eqTip.innerHTML = tHead(title) + rows.map(function(r){return tRow(r[0],r[1]);}).join('');
+      eqTip.style.display='block'; posTip(eqTip,e);
+    });
+    el.addEventListener('mousemove',  function(e){ posTip(eqTip,e); });
+    el.addEventListener('mouseleave', function(){ eqTip.style.display='none'; });
+  }
+  function bindGrp(el, label, vals) {
+    el.addEventListener('mouseenter', function(e) {
+      grpTip.innerHTML = tHead(label)
+        + tRow('O₂ (среднее)', vals.o2+' мг/л')
+        + tRow('Темп. (среднее)', vals.temp+' °C')
+        + tRow('pH (среднее)', vals.ph)
+        + tRow('NH4 (среднее)', vals.nh4+' мг/л');
+      grpTip.style.display='block'; posTip(grpTip,e);
+    });
+    el.addEventListener('mousemove',  function(e){ posTip(grpTip,e); });
+    el.addEventListener('mouseleave', function(){ grpTip.style.display='none'; });
+  }
+
+  function mkDiv(cls, style) {
+    var d = document.createElement('div');
+    if(cls)   d.className    = cls;
+    if(style) d.style.cssText = style;
+    return d;
+  }
+
   function makeBasin(num) {
-    const b = BASINS[num]; if (!b) return null;
-    const d = document.createElement('div');
-    d.className = 'sch-basin ' + b.status;
-    d.addEventListener('mouseenter', e => showTooltip(e, b));
-    d.addEventListener('mousemove',  e => moveTooltip(e));
+    var b = getB(num);
+    var d = mkDiv('sch-basin '+b.status);
+    d.addEventListener('mouseenter', function(e){ showTooltip(e,b); });
+    d.addEventListener('mousemove',  function(e){ moveTooltip(e); });
     d.addEventListener('mouseleave', hideTooltip);
-    d.addEventListener('click', () => openBasin(num));
-    d.innerHTML = `<div class="sch-dot ${b.feeder?'':'off'}"></div>
-                   <div class="sch-o2">${b.o2}</div>
-                   <div class="sch-num">${num}</div>`;
+    d.addEventListener('click',      function(){ openBasin(num); });
+    d.innerHTML = '<div class="sch-dot '+(b.feeder?'':'off')+'"></div>'
+                + '<div class="sch-o2">'+b.o2+'</div>'
+                + '<div class="sch-num">'+num+'</div>';
     return d;
   }
 
-  function makeSection(nums, labelTxt, bg) {
-    const sec = document.createElement('div');
-    sec.className = 'sch-section';
-    const lbl = document.createElement('div');
-    lbl.className = 'sch-section-label';
-    lbl.style.background = bg || '#e2e8f0';
-    lbl.textContent = labelTxt;
-    sec.appendChild(lbl);
-    const row = document.createElement('div');
-    row.className = 'sch-row';
-    nums.forEach(n => { const el = makeBasin(n); if(el) row.appendChild(el); });
-    sec.appendChild(row);
-    return sec;
+  function makeGroup(label, nums) {
+    var vals = gVals(nums);
+    var block = mkDiv();
+
+    var hdr = mkDiv('sch-grp-hdr');
+    var faint = mkDiv('sch-grp-faint');
+    faint.textContent = '(общие по группе)';
+    bindGrp(faint, label, vals);
+
+    hdr.innerHTML = '<strong style="font-size:11px;color:#1e3a8a;min-width:80px">'+label+'</strong>'
+      + '<span style="font-size:11px;color:#334155">O₂: <b>'+vals.o2+'</b> мг/л</span>'
+      + '<span style="font-size:11px;color:#334155">Темп.: <b>'+vals.temp+'</b> °C</span>'
+      + '<span style="font-size:11px;color:#64748b;border-left:1px solid #bfdbfe;padding-left:10px">pH: <b>'+vals.ph+'</b></span>'
+      + '<span style="font-size:11px;color:#64748b">NH4: <b>'+vals.nh4+'</b> мг/л</span>';
+    hdr.appendChild(faint);
+    block.appendChild(hdr);
+
+    var row = mkDiv('sch-grp-row');
+    nums.forEach(function(n){ row.appendChild(makeBasin(n)); });
+    block.appendChild(row);
+    return block;
   }
 
-  function road() {
-    const d = document.createElement('div');
-    d.className = 'sch-road';
+  function makePair(gL, gR) {
+    var w = mkDiv('', 'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px');
+    w.appendChild(makeGroup(gL.label, gL.nums));
+    w.appendChild(makeGroup(gR.label, gR.nums));
+    return w;
+  }
+
+  function makeFlowArrow(txt) {
+    var d = mkDiv('', 'text-align:center;font-size:11px;color:#64748b;padding:4px 0 6px');
+    d.textContent = txt;
     return d;
   }
 
-  // TOP: basins 71-100 (30 units)
-  c.appendChild(makeSection(
-    Array.from({length:30},(_,i)=>71+i),
-    '30 бассейнов 4×40м · Блок 71–100', '#dbeafe'
+  // ── Left canal column ──
+  var leftCol  = mkDiv('sch-left-col');
+  var pipe     = mkDiv('sch-canal-pipe');
+  var inner    = mkDiv('sch-left-inner');
+
+  var inLbl = mkDiv('sch-in-label'); inLbl.textContent = '↓ ВХОД';
+  inner.appendChild(inLbl);
+
+  var cText = mkDiv('sch-canal-text'); cText.textContent = 'Канал подачи воды (с Ардона)';
+  inner.appendChild(cText);
+
+  var arr0 = mkDiv('sch-flow-arrow'); arr0.textContent = '↓';
+  inner.appendChild(arr0);
+
+  // Насос (круглая)
+  var pump = mkDiv('sch-pump-card');
+  pump.innerHTML = '<div class="sch-pump-icon">⊕</div><div class="sch-pump-name">Насос</div>';
+  bindEq(pump, 'Насос', [
+    ['Статус','✓ Работает'],['Расход','850 м³/ч'],['Напор','4.2 м'],
+    ['Мощность','75 кВт'],['Последнее ТО','12.05.2026'],['Следующее ТО','12.08.2026']
+  ]);
+  inner.appendChild(pump);
+
+  var arr1 = mkDiv('sch-flow-arrow'); arr1.textContent = '↓';
+  inner.appendChild(arr1);
+
+  // МФ (прямоугольная)
+  var mf = mkDiv('sch-mf-card');
+  var mfDot = mkDiv('sch-mf-dot');
+  var mfName = mkDiv('sch-mf-name'); mfName.innerHTML = 'МФ<br><span style="font-weight:400;font-size:8px;color:#64748b">микрофильтр</span>';
+  mf.appendChild(mfDot);
+  mf.appendChild(mfName);
+  bindEq(mf, 'Микрофильтр (МФ)', [
+    ['Статус','✓ Работает'],['Тип','Барабанный'],['Ячейка','60 мкм'],
+    ['Промывка','Авто'],['Последнее ТО','20.05.2026'],['Следующее ТО','20.08.2026']
+  ]);
+  inner.appendChild(mf);
+
+  leftCol.appendChild(pipe);
+  leftCol.appendChild(inner);
+
+  // ── Groups column ──
+  var grpCol = mkDiv('sch-groups-col');
+
+  var hdrBanner = mkDiv('', 'font-size:12px;font-weight:700;color:#1e3a8a;margin-bottom:8px;padding:6px 10px;background:#dbeafe;border-radius:6px;border-left:3px solid #3b82f6');
+  hdrBanner.textContent = '↓  ВХОД воды (с Ардона после МФ)';
+  grpCol.appendChild(hdrBanner);
+
+  grpCol.appendChild(makePair(
+    {label:'A_01–25', nums:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]},
+    {label:'A_26–50', nums:[26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50]}
   ));
-  c.appendChild(road());
+  grpCol.appendChild(makeFlowArrow('↓ по течению'));
+  grpCol.appendChild(makePair(
+    {label:'A_51–75',  nums:[51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75]},
+    {label:'A_76–100', nums:[76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100]}
+  ));
+  grpCol.appendChild(makeFlowArrow('↓ по течению'));
 
-  // MIDDLE: A_76-100 | A_51-75
-  const mid = document.createElement('div');
-  mid.className = 'sch-double';
-  mid.appendChild(makeSection(Array.from({length:25},(_,i)=>100-i), 'A_76–100', '#e0f2fe'));
-  mid.appendChild(makeSection(Array.from({length:25},(_,i)=>75-i), 'A_51–75 · Ардон 5-е Озеро', '#fef3c7'));
-  c.appendChild(mid);
-  c.appendChild(road());
+  var g130nums = [];
+  for(var i=101;i<=130;i++) g130nums.push(i);
+  var g130 = makeGroup('Группа 101–130 (30 бассейнов)', g130nums);
+  g130.style.marginBottom = '8px';
+  grpCol.appendChild(g130);
 
-  // BOTTOM: A_26-50 | A_01-25
-  const bot = document.createElement('div');
-  bot.className = 'sch-double';
-  bot.appendChild(makeSection(Array.from({length:25},(_,i)=>50-i), 'A_26–50', '#f0fdf4'));
-  bot.appendChild(makeSection(Array.from({length:25},(_,i)=>25-i), 'A_01–25', '#f0fdf4'));
-  c.appendChild(bot);
+  var ftrBanner = mkDiv('', 'font-size:12px;font-weight:700;color:#1e3a8a;margin-top:4px;padding:6px 10px;background:#dbeafe;border-radius:6px;border-left:3px solid #3b82f6');
+  ftrBanner.textContent = '↓  ВЫХОД';
+  grpCol.appendChild(ftrBanner);
+
+  // ── Assemble ──
+  var outer = mkDiv('sch-outer');
+  outer.appendChild(leftCol);
+  outer.appendChild(grpCol);
+  c.appendChild(outer);
 }
 
 
@@ -594,7 +766,7 @@ function buildScheme() {
 let currentFilter = 'all';
 
 function updateFilterCounts() {
-  const basins = Object.values(BASINS).filter(b => b.num >= 1 && b.num <= 100);
+  const basins = Object.values(BASINS).filter(b => b.num >= 1 && b.num <= 130);
   document.getElementById('fc-all').textContent   = basins.length;
   document.getElementById('fc-alarm').textContent = basins.filter(b=>b.status==='alarm').length;
   document.getElementById('fc-warn').textContent  = basins.filter(b=>b.status==='warn').length;
@@ -660,7 +832,7 @@ function toggleGroup(id) {
   document.getElementById(id).classList.toggle('open');
 }
 function openBasin(n) {
-  alert('Экран 3: детализация бассейна Б-' + String(n).padStart(2,'0') + ' (в разработке)');
+  alert('Экран 3: детализация бассейна Б-' + String(n).padStart(2,'0'));
 }
 
 // init
@@ -673,6 +845,49 @@ setInterval(() => {
   if(secs > 60) secs = 1;
   document.getElementById('updTimer').textContent = 'Обновлено ' + secs + ' сек. назад';
 }, 1000);
+
+// ── FULLSCREEN ──
+var _fsActive = false;
+
+function openFS() {
+  var overlay = document.getElementById('scheme-fs');
+  overlay.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  _fsActive = true;
+
+  var fsCont = document.getElementById('fs-scheme-cont');
+  fsCont.innerHTML = '';
+  _buildSchemeInto(fsCont);
+
+  var fsBar = document.getElementById('fs-filter-bar');
+  fsBar.innerHTML = '';
+  var filters = [
+    {key:'all',label:'Все бассейны'},{key:'alarm',label:'⚠ Авария'},
+    {key:'warn',label:'Внимание'},{key:'ok',label:'Норма'},
+    {key:'feeder-on',label:'Кормушка вкл'},{key:'feeder-off',label:'Кормушка выкл'},
+    {key:'o2low',label:'O₂ < 8.0'},{key:'phhigh',label:'pH > 7.1'}
+  ];
+  filters.forEach(function(f) {
+    var btn = document.createElement('button');
+    btn.className = 'fs-fbtn' + (f.key === currentFilter ? ' active' : '');
+    btn.textContent = f.label;
+    btn.onclick = function() {
+      applyFilter(f.key);
+      fsBar.querySelectorAll('.fs-fbtn').forEach(function(b){b.classList.remove('active');});
+      btn.classList.add('active');
+    };
+    fsBar.appendChild(btn);
+  });
+  setTimeout(function(){ overlay.scrollTop = 0; }, 20);
+}
+
+function closeFS() {
+  document.getElementById('scheme-fs').style.display = 'none';
+  document.body.style.overflow = '';
+  _fsActive = false;
+}
+
+document.addEventListener('keydown', function(e){ if(e.key==='Escape' && _fsActive) closeFS(); });
 </script>
 </body>
 </html>

@@ -60,6 +60,7 @@ const TAB_ITEMS: { id: Tab; icon: React.ReactNode; label: string }[] = [
 ];
 
 interface ThreshRow {
+  id: string;
   param: string;
   unit: string;
   warnMin: string;
@@ -71,6 +72,7 @@ interface ThreshRow {
 
 const INITIAL_THRESH: ThreshRow[] = [
   {
+    id: 'o2',
     param: 'O₂',
     unit: 'мг/л',
     warnMin: '7.5',
@@ -80,6 +82,7 @@ const INITIAL_THRESH: ThreshRow[] = [
     noMax: true,
   },
   {
+    id: 'temp',
     param: 'Температура',
     unit: '°C',
     warnMin: '6.0',
@@ -89,6 +92,7 @@ const INITIAL_THRESH: ThreshRow[] = [
     noMax: false,
   },
   {
+    id: 'ph',
     param: 'pH',
     unit: '',
     warnMin: '6.5',
@@ -98,6 +102,7 @@ const INITIAL_THRESH: ThreshRow[] = [
     noMax: false,
   },
   {
+    id: 'nh4',
     param: 'NH4',
     unit: 'мг/л',
     warnMin: '0.8',
@@ -106,7 +111,42 @@ const INITIAL_THRESH: ThreshRow[] = [
     alarmMax: '',
     noMax: true,
   },
+  {
+    id: 'level',
+    param: 'Уровень воды',
+    unit: 'м',
+    warnMin: '1.2',
+    warnMax: '1.8',
+    alarmMin: '1.0',
+    alarmMax: '2.0',
+    noMax: false,
+  },
+  {
+    id: 'turbidity',
+    param: 'Мутность',
+    unit: 'NTU',
+    warnMin: '',
+    warnMax: '15',
+    alarmMin: '',
+    alarmMax: '25',
+    noMax: false,
+  },
 ];
+
+let threshSeq = 0;
+function newThreshRow(): ThreshRow {
+  threshSeq += 1;
+  return {
+    id: `custom-${threshSeq}`,
+    param: '',
+    unit: '',
+    warnMin: '',
+    warnMax: '',
+    alarmMin: '',
+    alarmMax: '',
+    noMax: false,
+  };
+}
 
 export function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('users');
@@ -167,10 +207,18 @@ export function SettingsPage() {
 
   function updateThreshCell(
     rowIdx: number,
-    field: 'warnMin' | 'warnMax' | 'alarmMin' | 'alarmMax',
+    field: 'param' | 'unit' | 'warnMin' | 'warnMax' | 'alarmMin' | 'alarmMax',
     value: string
   ) {
     setThreshRows((rows) => rows.map((r, i) => (i === rowIdx ? { ...r, [field]: value } : r)));
+  }
+
+  function addThreshRow() {
+    setThreshRows((rows) => [...rows, newThreshRow()]);
+  }
+
+  function removeThreshRow(rowIdx: number) {
+    setThreshRows((rows) => rows.filter((_, i) => i !== rowIdx));
   }
 
   return (
@@ -400,26 +448,42 @@ export function SettingsPage() {
                 <div className={styles.cardTitle}>Параметры воды</div>
                 <div className={styles.cardSub}>
                   Warning — предупреждение, Alarm — критическая тревога. Применяется ко всем
-                  бассейнам участка по умолчанию.
+                  бассейнам участка по умолчанию. Можно добавлять и удалять параметры.
                 </div>
                 <div className={styles.threshTableWrap}>
                   <table className={styles.threshTable}>
                     <thead>
                       <tr>
                         <th>Параметр</th>
+                        <th>Ед. изм.</th>
                         <th>Участок</th>
                         <th className={styles.levelWarn}>Warning мин.</th>
                         <th className={styles.levelWarn}>Warning макс.</th>
                         <th className={styles.levelAlarm}>Alarm мин.</th>
                         <th className={styles.levelAlarm}>Alarm макс.</th>
+                        <th />
                       </tr>
                     </thead>
                     <tbody>
                       {threshRows.map((row, i) => (
-                        <tr key={row.param}>
+                        <tr key={row.id}>
                           <td>
-                            <span className={styles.paramName}>{row.param}</span>
-                            {row.unit && <span className={styles.paramUnit}>{row.unit}</span>}
+                            <input
+                              type="text"
+                              className={cn(styles.threshInput, styles.threshParamInput)}
+                              placeholder="Параметр"
+                              value={row.param}
+                              onChange={(e) => updateThreshCell(i, 'param', e.target.value)}
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="text"
+                              className={cn(styles.threshInput, styles.threshUnitInput)}
+                              placeholder="—"
+                              value={row.unit}
+                              onChange={(e) => updateThreshCell(i, 'unit', e.target.value)}
+                            />
                           </td>
                           <td className={styles.textMuted}>Все</td>
                           <td>
@@ -458,11 +522,27 @@ export function SettingsPage() {
                               onChange={(e) => updateThreshCell(i, 'alarmMax', e.target.value)}
                             />
                           </td>
+                          <td>
+                            <button
+                              className={cn(styles.iconBtn, styles.iconBtnDanger)}
+                              title="Удалить параметр"
+                              onClick={() => removeThreshRow(i)}
+                            >
+                              <Icon name="trash" size={13} />
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+                <button
+                  className={cn(styles.btn, styles.btnOutline, styles.addParamBtn)}
+                  onClick={addThreshRow}
+                >
+                  <Icon name="plus" size={14} />
+                  Добавить параметр
+                </button>
               </div>
 
               <div className={styles.card}>

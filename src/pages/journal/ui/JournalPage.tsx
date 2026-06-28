@@ -60,6 +60,7 @@ const CSV_COLS: (keyof LogEvent)[] = [
   'accepted',
   'acceptedBy',
   'acceptedAt',
+  'comment',
 ];
 
 const CSV_HEADERS = [
@@ -76,6 +77,7 @@ const CSV_HEADERS = [
   'Принято',
   'Кто принял',
   'Время принятия',
+  'Комментарий',
 ];
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -446,9 +448,23 @@ export function JournalPage() {
                     )}
                   </td>
                   <td className={styles.tdAcceptedBy}>
-                    {e.acceptedBy || '—'}
-                    <br />
-                    <span className={styles.acceptedAt}>{e.acceptedAt || ''}</span>
+                    {e.accepted && e.acceptedBy ? (
+                      <>
+                        {e.acceptedBy}
+                        <br />
+                        <span className={styles.acceptedAt}>{e.acceptedAt || ''}</span>
+                        {e.comment && (
+                          <>
+                            <br />
+                            <span className={styles.acceptedComment} title={e.comment}>
+                              «{e.comment}»
+                            </span>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      '—'
+                    )}
                   </td>
                 </tr>
               ))}

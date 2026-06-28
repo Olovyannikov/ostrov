@@ -26,4 +26,6 @@ export interface LogEvent {
   threshold?: string;
   acceptedBy?: string;
   acceptedAt?: string;
+  /** Комментарий сотрудника при снятии тревоги. */
+  comment?: string;
 }

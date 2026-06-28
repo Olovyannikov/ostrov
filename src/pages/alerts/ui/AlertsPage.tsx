@@ -3,7 +3,10 @@ import { Topbar } from '@/widgets/topbar';
 import { Icon, Breadcrumb } from '@/shared/ui';
 import { cn } from '@/shared/lib';
 import { ALERT_EVENTS, type LogEvent } from '@/entities/event';
+import { AckDialog, type AckResult } from '@/features/alarm/acknowledge';
 import styles from './AlertsPage.module.css';
+
+type AckMode = { type: 'one'; id: string } | { type: 'all' } | null;
 
 type TabKey = 'all' | 'alarm' | 'warn' | 'service' | 'new';
 type SortKey = 'priority' | 'time' | 'site';
@@ -45,6 +48,7 @@ export function AlertsPage() {
   const [sort, setSort] = useState<SortKey>('priority');
   const [page, setPage] = useState(5);
   const [sortOpen, setSortOpen] = useState(false);
+  const [ackMode, setAckMode] = useState<AckMode>(null);
   const sortWrapRef = useRef<HTMLDivElement>(null);
 
   // Close sort dropdown on outside click
@@ -79,19 +83,28 @@ export function AlertsPage() {
     setPage(5);
   }, []);
 
-  const acceptOne = useCallback((id: string) => {
-    setEvents((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, accepted: true, acceptedBy: 'Оператор' } : e))
-    );
-  }, []);
-
-  const acceptAllAlarms = useCallback(() => {
-    setEvents((prev) =>
-      prev.map((e) =>
-        e.type === 'alarm' && !e.accepted ? { ...e, accepted: true, acceptedBy: 'Оператор' } : e
-      )
-    );
-  }, []);
+  const applyAck = useCallback(
+    (result: AckResult) => {
+      setEvents((prev) =>
+        prev.map((e) => {
+          const match =
+            ackMode?.type === 'one'
+              ? e.id === ackMode.id
+              : ackMode?.type === 'all' && e.type === 'alarm' && !e.accepted;
+          if (!match) return e;
+          return {
+            ...e,
+            accepted: true,
+            acceptedBy: result.employee,
+            acceptedAt: result.at,
+            comment: result.comment || undefined,
+          };
+        })
+      );
+      setAckMode(null);
+    },
+    [ackMode]
+  );
 
   // Filtering
   const filtered = events.filter((e) => {
@@ -262,7 +275,7 @@ export function AlertsPage() {
           </div>
 
           {/* Action buttons */}
-          <button className={styles.btnOutline} onClick={acceptAllAlarms}>
+          <button className={styles.btnOutline} onClick={() => setAckMode({ type: 'all' })}>
             <Icon name="check" size={13} />
             Принять все аварии
           </button>
@@ -328,7 +341,18 @@ export function AlertsPage() {
                         {e.acceptedBy && (
                           <>
                             <br />
-                            <span className={styles.statusBy}>{e.acceptedBy}</span>
+                            <span className={styles.statusBy}>
+                              {e.acceptedBy}
+                              {e.acceptedAt ? ` · ${e.acceptedAt}` : ''}
+                            </span>
+                          </>
+                        )}
+                        {e.comment && (
+                          <>
+                            <br />
+                            <span className={styles.statusComment} title={e.comment}>
+                              «{e.comment}»
+                            </span>
                           </>
                         )}
                       </span>
@@ -343,7 +367,7 @@ export function AlertsPage() {
                       <button
                         className={styles.acceptBtn}
                         disabled={e.accepted}
-                        onClick={() => !e.accepted && acceptOne(e.id)}
+                        onClick={() => !e.accepted && setAckMode({ type: 'one', id: e.id })}
                       >
                         {e.accepted ? '✓ Принято' : 'Принять'}
                       </button>
@@ -383,6 +407,14 @@ export function AlertsPage() {
           </div>
         </div>
       </div>
+
+      {ackMode && (
+        <AckDialog
+          title={ackMode.type === 'all' ? 'Принять все аварии' : 'Снятие тревоги'}
+          onConfirm={applyAck}
+          onCancel={() => setAckMode(null)}
+        />
+      )}
     </>
   );
 }

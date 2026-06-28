@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Бассейн Б-12 — Карджин — Остров</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -105,7 +104,7 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex
   letter-spacing:.04em;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
 
 /* CHARTS */
-.chart-wrap{position:relative;height:180px}
+.chart-wrap{position:relative;height:240px;width:100%}
 
 /* THRESHOLD LINES legend */
 .thresh-legend{display:flex;gap:14px;font-size:11px;color:var(--muted);margin-top:6px}
@@ -151,6 +150,31 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex
 .event-who{font-size:11px;color:var(--muted)}
 .event-ack{font-size:10px;color:var(--ok);font-weight:600;white-space:nowrap}
 .event-unack{font-size:10px;color:var(--alarm);font-weight:600;white-space:nowrap}
+
+/* CHARTS COLUMN - full width stacked */
+.charts-col { display:flex; flex-direction:column; gap:16px; }
+.charts-col .card { width:100%; }
+.chart-wrap { position:relative; height:240px; width:100%; }
+.chart-wrap canvas { display:block; width:100%; height:100%; }
+
+/* COMPARE BUTTON */
+.cmp-btn {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600;
+  cursor:pointer; border:1.5px solid #e2e8f0; background:#f8fafc; color:#64748b;
+  transition:all .15s; line-height:1.6; margin-left:auto;
+}
+.cmp-btn:hover { background:#eff6ff; border-color:#93c5fd; color:#1d4ed8; }
+.cmp-btn.active { background:#dbeafe; border-color:#3b82f6; color:#1d4ed8; }
+
+/* COMPARE INLINE LEGEND */
+.cmp-legend { display:none; flex-wrap:wrap; gap:6px 14px; margin:6px 0 2px;
+  padding:7px 10px; background:#f8fafc; border-radius:6px;
+  border:1px solid #e2e8f0; font-size:11px; }
+.cmp-legend.show { display:flex; }
+.cmp-leg-item { display:flex; align-items:center; gap:5px; color:#374151; }
+.cmp-leg-line { width:20px; height:3px; border-radius:2px; flex-shrink:0; }
+.cmp-leg-item.curr span { font-weight:700; }
 </style>
 </head>
 <body>
@@ -239,10 +263,13 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex
           <div class="kpi-val ok">8.7</div><div class="kpi-lbl">Темп. °C</div>
         </div>
         <div class="kpi-box ok">
-          <div class="kpi-val ok">7.1</div><div class="kpi-lbl">pH</div>
+          <div class="kpi-val ok">✓ Вкл</div><div class="kpi-lbl">Кормушка</div>
         </div>
         <div class="kpi-box ok">
-          <div class="kpi-val ok">0.05</div><div class="kpi-lbl">NH4 мг/л</div>
+          <div class="kpi-val ok">3ч 12м</div><div class="kpi-lbl">Время работы</div>
+        </div>
+        <div class="kpi-box ok">
+          <div class="kpi-val ok">8 раз</div><div class="kpi-lbl">Кормлений</div>
         </div>
       </div>
       <span class="status-badge badge-alarm">🔴 Авария</span>
@@ -273,15 +300,20 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex
     </div>
 
     <!-- CHARTS ROW -->
-    <div class="grid-2">
+    <div class="charts-col">
       <div class="card">
-        <div class="card-title">
-          Кислород O₂
+        <div class="card-title" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">
+          <span>Кислород O₂</span>
           <span style="font-size:11px;color:var(--alarm);font-weight:600">⚠ Критически низкий</span>
+          <button class="cmp-btn" id="cmpBtn" onclick="openCmpPopup()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Сравнение соседних
+          </button>
         </div>
+        <div class="cmp-legend" id="cmpLegend"></div>
         <div class="chart-wrap"><canvas id="chartO2"></canvas></div>
         <div class="thresh-legend">
-          <div class="tl-item"><div class="tl-line" style="background:#ef4444;height:2px;border-top:2px dashed #ef4444;background:none"></div>Авария &lt; 7.0</div>
+          <div class="tl-item"><div class="tl-line" style="border-top:2px dashed #ef4444;background:none"></div>Авария &lt; 7.0</div>
           <div class="tl-item"><div class="tl-line" style="border-top:2px dashed #f59e0b;background:none"></div>Внимание &lt; 8.0</div>
         </div>
       </div>
@@ -292,19 +324,23 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex
           <div class="tl-item"><div class="tl-line" style="border-top:2px dashed #f59e0b;background:none"></div>Внимание &gt; 9.5 °C</div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-title">pH</div>
-        <div class="chart-wrap"><canvas id="chartPh"></canvas></div>
-        <div class="thresh-legend">
-          <div class="tl-item"><div class="tl-line" style="border-top:2px dashed #f59e0b;background:none"></div>Внимание: 6.5–7.5</div>
+      <div class="card" style="grid-column:span 2">
+        <div class="card-title">Кормушка — активность за сутки</div>
+        <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px">Статус</div>
+            <div style="font-size:20px;font-weight:700;color:#16a34a">✓ Включена</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px">Время работы сегодня</div>
+            <div style="font-size:20px;font-weight:700;color:#0ea5e9">3ч 12м</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px">Кормлений за сутки</div>
+            <div style="font-size:20px;font-weight:700;color:#8b5cf6">8 раз</div>
+          </div>
         </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Аммонийный азот NH4</div>
-        <div class="chart-wrap"><canvas id="chartNh4"></canvas></div>
-        <div class="thresh-legend">
-          <div class="tl-item"><div class="tl-line" style="border-top:2px dashed #f59e0b;background:none"></div>Внимание &gt; 0.08</div>
-        </div>
+        <div class="chart-wrap"><canvas id="chartFeeder"></canvas></div>
       </div>
     </div>
 
@@ -405,107 +441,273 @@ body{background:var(--bg);font-family:var(--font);color:var(--text);display:flex
 </main>
 
 <script>
-const LABELS   = ["04:00", "04:30", "05:00", "05:30", "06:00", "06:30", "07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00", "23:30", "00:00", "00:30", "01:00", "01:30", "02:00", "02:30", "03:00", "03:30"];
-const O2_DATA  = [9.15, 9.17, 9.39, 9.29, 9.5, 9.51, 9.48, 9.66, 9.57, 9.72, 9.64, 9.67, 9.78, 9.9, 9.68, 9.69, 9.78, 9.84, 9.69, 9.59, 9.7, 9.36, 9.54, 9.29, 9.18, 9.1, 9.08, 9.16, 8.89, 8.95, 8.9, 8.76, 8.76, 6.47, 6.43, 6.45, 6.57, 6.48, 8.54, 8.63, 8.61, 8.59, 8.77, 8.79, 8.7, 8.86, 8.9, 9.07];
-const TEMP_DATA= [8.32, 8.32, 8.42, 8.37, 8.44, 8.5, 8.47, 8.53, 8.51, 8.59, 8.61, 8.6, 8.64, 8.58, 8.61, 8.6, 8.58, 8.55, 8.57, 8.55, 8.48, 8.46, 8.37, 8.4, 8.36, 8.35, 8.3, 8.21, 8.18, 8.18, 8.08, 8.1, 8.04, 8.01, 7.99, 8.04, 7.97, 7.98, 7.99, 8.04, 7.97, 8.02, 8.05, 8.1, 8.12, 8.15, 8.13, 8.17];
-const PH_DATA  = [7.04, 7.09, 7.11, 7.07, 7.09, 7.1, 7.12, 7.14, 7.16, 7.14, 7.13, 7.16, 7.16, 7.17, 7.2, 7.18, 7.16, 7.16, 7.15, 7.11, 7.15, 7.13, 7.12, 7.1, 7.06, 7.05, 7.01, 7.03, 6.98, 6.97, 6.96, 6.95, 6.95, 6.92, 6.91, 6.92, 6.91, 6.92, 6.9, 6.95, 6.94, 6.92, 6.93, 6.95, 6.96, 6.95, 7.01, 7.03];
-const NH4_DATA = [0.05, 0.06, 0.05, 0.06, 0.06, 0.06, 0.06, 0.06, 0.06, 0.07, 0.06, 0.06, 0.07, 0.06, 0.07, 0.07, 0.07, 0.07, 0.06, 0.06, 0.06, 0.06, 0.06, 0.06, 0.06, 0.05, 0.06, 0.06, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.04, 0.04, 0.04, 0.04, 0.04, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05];
-const EVENTS   = [{"time": "03:12", "type": "alarm", "msg": "Критически низкий O₂: 6.4 мг/л", "who": "Система", "ack": false}, {"time": "03:10", "type": "alarm", "msg": "Низкий O₂: 7.1 мг/л", "who": "Система", "ack": false}, {"time": "02:47", "type": "warn", "msg": "O₂ ниже порога предупреждения: 7.8 мг/л", "who": "Система", "ack": true}, {"time": "01:30", "type": "ok", "msg": "Кормушка перезапущена", "who": "Иванов А.", "ack": true}, {"time": "00:15", "type": "service", "msg": "Плановая проверка датчика O2-Б12-вых", "who": "Петров В.", "ack": true}];
+// ── TIMER ──
+var updSeconds = 5;
+setInterval(function(){
+  updSeconds++;
+  var el = document.getElementById('updTimer');
+  if(el) el.textContent = 'Обновлено ' + updSeconds + ' сек. назад';
+}, 1000);
 
-// ── CHARTS ──
-const chartDefaults = {
-  type: 'line',
-  options: {
-    responsive: true, maintainAspectRatio: false, animation: false,
-    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
-    scales: {
-      x: { grid: { color: '#f1f5f9' }, ticks: { maxTicksLimit: 8, font: { size: 10 }, color: '#94a3b8' } },
-      y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 }, color: '#94a3b8' } }
-    },
-    elements: { point: { radius: 0, hoverRadius: 4 }, line: { tension: 0.3, borderWidth: 2 } }
-  }
-};
-
-function makeChart(id, data, color, alarmLine, warnLine, unit) {
-  const ctx = document.getElementById(id).getContext('2d');
-  const datasets = [{
-    data: data,
-    borderColor: color,
-    backgroundColor: color + '18',
-    fill: true,
-    label: unit
-  }];
-  if (alarmLine) datasets.push({
-    data: Array(data.length).fill(alarmLine),
-    borderColor: '#ef4444', borderDash: [5,3], borderWidth: 1.5,
-    pointRadius: 0, fill: false, label: 'Авария'
-  });
-  if (warnLine) datasets.push({
-    data: Array(data.length).fill(warnLine),
-    borderColor: '#f59e0b', borderDash: [5,3], borderWidth: 1.5,
-    pointRadius: 0, fill: false, label: 'Внимание'
-  });
-  return new Chart(ctx, {
-    ...chartDefaults,
-    data: { labels: LABELS, datasets },
-    options: { ...chartDefaults.options }
-  });
-}
-
-makeChart('chartO2',   O2_DATA,   '#ef4444', 7.0, 8.0, 'O₂ мг/л');
-makeChart('chartTemp', TEMP_DATA, '#0284c7', null, 9.5, '°C');
-makeChart('chartPh',   PH_DATA,   '#8b5cf6', null, null, 'pH');
-makeChart('chartNh4',  NH4_DATA,  '#16a34a', null, 0.08, 'мг/л');
-
-// ── EVENTS ──
-function buildEvents() {
-  const list = document.getElementById('eventList');
-  list.innerHTML = '';
-  EVENTS.forEach(e => {
-    const item = document.createElement('div');
-    item.className = 'event-item ' + e.type;
-    item.innerHTML = `
-      <div class="event-dot ${e.type}"></div>
-      <div style="flex:1">
-        <div class="event-msg">${e.msg}</div>
-        <div class="event-who" style="margin-top:2px">${e.who}</div>
-      </div>
-      <div style="text-align:right">
-        <div class="event-time">${e.time}</div>
-        <div class="${e.ack ? 'event-ack' : 'event-unack'}" style="margin-top:3px">${e.ack ? '✓ Принято' : '! Не принято'}</div>
-      </div>`;
-    list.appendChild(item);
-  });
-}
-buildEvents();
-
-// ── CONTROLS ──
-function ackAlarm() {
-  const btn = event.target.closest('button');
-  btn.textContent = '✓ Авария принята';
-  btn.style.background = '#dcfce7';
-  btn.style.color = '#16a34a';
-  btn.style.borderColor = '#86efac';
-  btn.disabled = true;
-}
-
-function toggleFeeder() {
-  const on = document.getElementById('feederToggle').checked;
-  document.getElementById('feederDot').style.background = on ? '#16a34a' : '#cbd5e1';
-  document.getElementById('feederLabel').textContent = on ? 'Кормушка активна' : 'Кормушка выключена';
-}
-
+// ── PERIOD ──
 function setPeriod(el, p) {
-  document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.ptab').forEach(function(t){ t.classList.remove('active'); });
   el.classList.add('active');
 }
 
-// timer
-let secs = 5;
-setInterval(() => {
-  secs++; if(secs>60) secs=1;
-  document.getElementById('updTimer').textContent = 'Обновлено ' + secs + ' сек. назад';
-}, 1000);
+// ── ACK ALARM ──
+function ackAlarm() {
+  var btn = document.querySelector('.btn-danger');
+  if(btn){ btn.textContent = '✓ Авария принята'; btn.disabled = true; btn.style.opacity='.6'; }
+}
+
+// ── CANVAS CHART RENDERER ──
+function drawLineChart(canvasId, cfg) {
+  var cv = document.getElementById(canvasId);
+  if(!cv) return;
+  var dpr = window.devicePixelRatio || 1;
+  var rect = cv.getBoundingClientRect();
+  var W = rect.width;
+  var H = rect.height || 240;
+  if(W < 10) W = cv.parentElement.getBoundingClientRect().width || 600;
+  cv.width  = Math.round(W * dpr);
+  cv.height = Math.round(H * dpr);
+  var ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  var pl=50, pr=16, pt=14, pb=30;
+  var cw=W-pl-pr, ch=H-pt-pb;
+
+  var allV = [];
+  cfg.series.forEach(function(s){ allV = allV.concat(s.data); });
+  if(cfg.hlines) cfg.hlines.forEach(function(h){ allV.push(h.y); });
+  var minV=Math.min.apply(null,allV), maxV=Math.max.apply(null,allV);
+  var pad=(maxV-minV)*0.1||0.5; minV-=pad; maxV+=pad;
+  var range=maxV-minV;
+
+  function ux(i,n){ return pl+(i/(n-1))*cw; }
+  function uy(v){ return pt+ch-((v-minV)/range)*ch; }
+
+  // grid lines
+  ctx.lineWidth=1;
+  for(var gi=0;gi<=4;gi++){
+    var gv=minV+(range/4)*gi;
+    var gy=uy(gv);
+    ctx.strokeStyle='#e8eef4'; ctx.beginPath(); ctx.moveTo(pl,gy); ctx.lineTo(pl+cw,gy); ctx.stroke();
+    ctx.fillStyle='#94a3b8'; ctx.font='11px system-ui,sans-serif';
+    ctx.textAlign='right'; ctx.fillText(gv.toFixed(1),pl-5,gy+4);
+  }
+
+  // x labels
+  var n=cfg.labels.length, step=Math.ceil(n/7);
+  ctx.fillStyle='#94a3b8'; ctx.font='11px system-ui,sans-serif'; ctx.textAlign='center';
+  for(var xi=0;xi<n;xi+=step){ ctx.fillText(cfg.labels[xi], ux(xi,n), H-8); }
+
+  // threshold lines
+  if(cfg.hlines) cfg.hlines.forEach(function(h){
+    ctx.save(); ctx.strokeStyle=h.color; ctx.lineWidth=1.5; ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(pl,uy(h.y)); ctx.lineTo(pl+cw,uy(h.y)); ctx.stroke(); ctx.restore();
+  });
+
+  // series
+  cfg.series.forEach(function(s){
+    var d=s.data, m=d.length;
+    ctx.save(); ctx.strokeStyle=s.color; ctx.lineWidth=s.width||2; ctx.setLineDash(s.dash||[]);
+    if(s.fill){
+      ctx.beginPath(); ctx.moveTo(ux(0,m),uy(d[0]));
+      for(var i=1;i<m;i++){ var cx=(ux(i-1,m)+ux(i,m))/2; ctx.bezierCurveTo(cx,uy(d[i-1]),cx,uy(d[i]),ux(i,m),uy(d[i])); }
+      ctx.lineTo(ux(m-1,m),pt+ch); ctx.lineTo(ux(0,m),pt+ch); ctx.closePath();
+      ctx.fillStyle=s.fillColor||s.color+'22'; ctx.fill();
+    }
+    ctx.beginPath(); ctx.moveTo(ux(0,m),uy(d[0]));
+    for(var i=1;i<m;i++){ var cx=(ux(i-1,m)+ux(i,m))/2; ctx.bezierCurveTo(cx,uy(d[i-1]),cx,uy(d[i]),ux(i,m),uy(d[i])); }
+    ctx.stroke(); ctx.restore();
+  });
+}
+
+function renderFeeder() {
+  var cv = document.getElementById('chartFeeder');
+  if(!cv) return;
+  var dpr = window.devicePixelRatio || 1;
+  var rect = cv.getBoundingClientRect();
+  var W = rect.width; var H = rect.height || 120;
+  if(W < 10) W = cv.parentElement.getBoundingClientRect().width || 600;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+  var ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
+  var FD=[0,0,0,0,0,0,1,1,0,1,0,1,0,1,0,1,0,0,1,0,1,0,0,0];
+  var n=FD.length, pl=4, pr=4, pt=8, pb=20;
+  var bw=Math.floor((W-pl-pr)/n)-2, ch=H-pt-pb;
+  ctx.clearRect(0,0,W,H);
+  FD.forEach(function(v,i){
+    var x=pl+i*((W-pl-pr)/n);
+    ctx.fillStyle=v?'#8b5cf6':'#e2e8f0';
+    ctx.beginPath(); ctx.roundRect(x+1,pt+(v?0:ch-4),bw,v?ch:4,3); ctx.fill();
+  });
+  ctx.fillStyle='#94a3b8'; ctx.font='10px system-ui,sans-serif'; ctx.textAlign='center';
+  for(var i=0;i<n;i+=4) ctx.fillText(i+':00', pl+i*((W-pl-pr)/n)+bw/2, H-5);
+}
+
+// ── DATA ──
+var LABELS=['04:00', '04:30', '05:00', '05:30', '06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30', '23:00', '23:30', '00:00', '00:30', '01:00', '01:30', '02:00', '02:30', '03:00', '03:30'];
+var O2_DATA=[9.15, 9.17, 9.39, 9.29, 9.5, 9.51, 9.48, 9.66, 9.57, 9.72, 9.64, 9.67, 9.78, 9.9, 9.68, 9.69, 9.78, 9.84, 9.69, 9.59, 9.7, 9.36, 9.54, 9.29, 9.18, 9.1, 9.08, 9.16, 8.89, 8.95, 8.9, 8.76, 8.76, 6.47, 6.43, 6.45, 6.57, 6.48, 8.54, 8.63, 8.61, 8.59, 8.77, 8.79, 8.7, 8.86, 8.9, 9.07];
+var TEMP_DATA=[8.32, 8.32, 8.42, 8.37, 8.44, 8.5, 8.47, 8.53, 8.51, 8.59, 8.61, 8.6, 8.64, 8.58, 8.61, 8.6, 8.58, 8.55, 8.57, 8.55, 8.48, 8.46, 8.37, 8.4, 8.36, 8.35, 8.3, 8.21, 8.18, 8.18, 8.08, 8.1, 8.04, 8.01, 7.99, 8.04, 7.97, 7.98, 7.99, 8.04, 7.97, 8.02, 8.05, 8.1, 8.12, 8.15, 8.13, 8.17];
+var NEIGHBOURS = [
+  {label:'Б-1',color:'#6366f1',data:[8.61, 8.63, 8.88, 8.65, 8.87, 8.86, 8.85, 9.13, 8.92, 9.15, 9.0, 9.05, 9.19, 9.39, 9.12, 9.01, 9.16, 9.19, 9.18, 9.07, 9.18, 8.85, 9.01, 8.8, 8.66, 8.47, 8.57, 8.58, 8.36, 8.38, 8.31, 8.15, 8.17, 5.85, 5.77, 5.93, 6.05, 6.0, 8.0, 8.06, 8.08, 7.94, 8.23, 8.2, 8.06, 8.22, 8.32, 8.44],curr:false},
+  {label:'Б-2',color:'#8b5cf6',data:[9.68, 9.7, 10.0, 9.79, 10.15, 10.15, 9.98, 10.29, 10.16, 10.34, 10.32, 10.36, 10.35, 10.56, 10.33, 10.37, 10.28, 10.52, 10.22, 10.11, 10.31, 10.02, 10.22, 9.85, 9.84, 9.6, 9.76, 9.71, 9.49, 9.46, 9.4, 9.25, 9.37, 7.07, 7.08, 7.11, 7.14, 7.14, 9.07, 9.3, 9.15, 9.27, 9.34, 9.37, 9.29, 9.36, 9.4, 9.67],curr:false},
+  {label:'Б-3',color:'#ec4899',data:[8.43, 8.41, 8.67, 8.6, 8.83, 8.76, 8.75, 8.9, 8.93, 8.98, 9.02, 8.88, 8.98, 9.18, 8.96, 9.04, 9.15, 9.14, 8.95, 8.93, 8.99, 8.61, 8.8, 8.49, 8.52, 8.31, 8.32, 8.48, 8.21, 8.27, 8.23, 8.12, 8.15, 5.86, 5.71, 5.72, 5.8, 5.77, 7.77, 8.02, 7.96, 7.84, 8.11, 8.13, 7.92, 8.22, 8.25, 8.36],curr:false},
+  {label:'Б-4',color:'#f43f5e',data:[10.21, 10.37, 10.54, 10.53, 10.63, 10.74, 10.56, 10.91, 10.7, 10.81, 10.76, 10.85, 10.84, 11.03, 10.73, 10.75, 10.86, 10.94, 10.79, 10.8, 10.83, 10.58, 10.77, 10.52, 10.42, 10.27, 10.26, 10.39, 10.05, 10.03, 10.05, 9.92, 9.85, 7.54, 7.52, 7.64, 7.78, 7.66, 9.68, 9.69, 9.66, 9.77, 9.93, 9.93, 9.78, 9.93, 9.99, 10.15],curr:false},
+  {label:'Б-5',color:'#f97316',data:[8.91, 9.04, 9.18, 9.1, 9.31, 9.28, 9.31, 9.54, 9.28, 9.53, 9.39, 9.5, 9.6, 9.61, 9.4, 9.5, 9.65, 9.7, 9.55, 9.32, 9.47, 9.18, 9.31, 9.04, 9.06, 8.93, 8.86, 8.96, 8.73, 8.8, 8.76, 8.53, 8.65, 6.32, 6.18, 6.18, 6.36, 6.23, 8.42, 8.33, 8.47, 8.32, 8.63, 8.58, 8.43, 8.76, 8.68, 8.97],curr:false},
+  {label:'Б-6',color:'#eab308',data:[9.82, 10.0, 10.19, 9.99, 10.24, 10.17, 10.16, 10.44, 10.37, 10.41, 10.43, 10.4, 10.54, 10.72, 10.38, 10.37, 10.51, 10.69, 10.42, 10.41, 10.38, 10.16, 10.36, 10.01, 9.87, 9.77, 9.76, 9.87, 9.66, 9.77, 9.6, 9.6, 9.44, 7.22, 7.23, 7.28, 7.4, 7.32, 9.21, 9.45, 9.26, 9.33, 9.49, 9.53, 9.37, 9.59, 9.69, 9.85],curr:false},
+  {label:'Б-7',color:'#84cc16',data:[8.08, 8.21, 8.32, 8.38, 8.57, 8.56, 8.47, 8.73, 8.52, 8.74, 8.61, 8.67, 8.87, 8.84, 8.73, 8.74, 8.7, 8.94, 8.68, 8.6, 8.66, 8.37, 8.63, 8.26, 8.23, 8.16, 8.15, 8.2, 7.88, 7.92, 7.88, 7.73, 7.84, 5.54, 5.37, 5.4, 5.48, 5.57, 7.45, 7.61, 7.55, 7.53, 7.86, 7.78, 7.73, 7.93, 7.9, 8.13],curr:false},
+  {label:'Б-8',color:'#22c55e',data:[10.32, 10.32, 10.44, 10.36, 10.64, 10.67, 10.48, 10.69, 10.75, 10.74, 10.77, 10.74, 10.91, 11.07, 10.8, 10.77, 10.84, 10.96, 10.82, 10.67, 10.79, 10.47, 10.59, 10.33, 10.29, 10.12, 10.2, 10.32, 10.06, 10.0, 9.98, 9.94, 9.83, 7.67, 7.47, 7.62, 7.58, 7.61, 9.7, 9.74, 9.74, 9.77, 9.97, 9.83, 9.8, 9.87, 9.98, 10.1],curr:false},
+  {label:'Б-9',color:'#10b981',data:[8.46, 8.53, 8.7, 8.65, 8.8, 8.9, 8.87, 9.01, 9.01, 9.01, 9.12, 9.04, 9.09, 9.26, 9.04, 8.97, 9.2, 9.25, 9.09, 9.0, 9.16, 8.74, 8.93, 8.76, 8.64, 8.41, 8.38, 8.62, 8.29, 8.23, 8.22, 8.11, 8.12, 5.8, 5.77, 5.84, 6.03, 5.9, 8.01, 7.91, 7.95, 8.05, 8.17, 8.14, 8.03, 8.31, 8.38, 8.48],curr:false},
+  {label:'Б-10',color:'#14b8a6',data:[9.15, 9.27, 9.5, 9.37, 9.45, 9.51, 9.5, 9.81, 9.65, 9.78, 9.72, 9.64, 9.87, 9.98, 9.67, 9.71, 9.81, 9.98, 9.71, 9.55, 9.81, 9.48, 9.56, 9.39, 9.33, 9.13, 9.16, 9.22, 8.95, 9.01, 9.02, 8.89, 8.9, 6.45, 6.55, 6.42, 6.55, 6.46, 8.51, 8.67, 8.58, 8.63, 8.9, 8.82, 8.67, 8.96, 8.95, 9.06],curr:false},
+  {label:'Б-11',color:'#06b6d4',data:[10.2, 10.06, 10.32, 10.22, 10.53, 10.49, 10.47, 10.69, 10.57, 10.77, 10.54, 10.67, 10.85, 10.91, 10.58, 10.74, 10.85, 10.78, 10.66, 10.56, 10.6, 10.36, 10.48, 10.21, 10.19, 10.15, 10.08, 10.19, 9.91, 9.93, 9.97, 9.8, 9.75, 7.42, 7.36, 7.52, 7.59, 7.43, 9.45, 9.61, 9.5, 9.49, 9.74, 9.67, 9.75, 9.77, 9.97, 10.06],curr:false},
+  {label:'Б-12',color:'#ef4444',data:[9.15, 9.17, 9.39, 9.29, 9.5, 9.51, 9.48, 9.66, 9.57, 9.72, 9.64, 9.67, 9.78, 9.9, 9.68, 9.69, 9.78, 9.84, 9.69, 9.59, 9.7, 9.36, 9.54, 9.29, 9.18, 9.1, 9.08, 9.16, 8.89, 8.95, 8.9, 8.76, 8.76, 6.47, 6.43, 6.45, 6.57, 6.48, 8.54, 8.63, 8.61, 8.59, 8.77, 8.79, 8.7, 8.86, 8.9, 9.07],curr:true},
+  {label:'Б-13',color:'#3b82f6',data:[8.58, 8.59, 8.72, 8.76, 8.88, 8.97, 8.84, 9.08, 9.05, 9.15, 8.98, 9.12, 9.14, 9.24, 9.15, 9.04, 9.15, 9.16, 9.18, 9.01, 9.09, 8.76, 8.95, 8.67, 8.64, 8.49, 8.43, 8.59, 8.27, 8.3, 8.23, 8.24, 8.08, 5.97, 5.89, 5.91, 6.05, 5.85, 7.93, 8.05, 8.08, 7.92, 8.18, 8.12, 8.16, 8.21, 8.39, 8.47],curr:false},
+  {label:'Б-14',color:'#a855f7',data:[8.98, 9.13, 9.24, 9.13, 9.44, 9.34, 9.39, 9.53, 9.54, 9.52, 9.46, 9.6, 9.57, 9.82, 9.48, 9.58, 9.71, 9.65, 9.52, 9.5, 9.64, 9.29, 9.37, 9.16, 8.99, 8.99, 8.99, 9.08, 8.7, 8.81, 8.83, 8.72, 8.64, 6.42, 6.31, 6.32, 6.47, 6.33, 8.37, 8.59, 8.54, 8.51, 8.63, 8.66, 8.52, 8.69, 8.69, 9.04],curr:false},
+  {label:'Б-15',color:'#d946ef',data:[9.29, 9.34, 9.65, 9.59, 9.71, 9.77, 9.75, 9.91, 9.84, 10.02, 9.82, 9.91, 10.1, 10.19, 9.84, 10.0, 9.96, 9.99, 10.0, 9.82, 10.02, 9.65, 9.85, 9.43, 9.44, 9.37, 9.38, 9.32, 9.13, 9.16, 9.17, 9.02, 8.96, 6.77, 6.69, 6.66, 6.82, 6.73, 8.86, 8.93, 8.78, 8.92, 9.06, 8.93, 8.96, 9.05, 9.12, 9.25],curr:false},
+  {label:'Б-16',color:'#fb923c',data:[8.68, 8.55, 8.92, 8.71, 8.98, 9.05, 8.9, 9.17, 9.13, 9.22, 9.08, 9.08, 9.35, 9.33, 9.22, 9.17, 9.18, 9.29, 9.14, 9.08, 9.12, 8.84, 9.02, 8.71, 8.72, 8.57, 8.62, 8.71, 8.4, 8.45, 8.41, 8.16, 8.28, 6.03, 5.93, 5.95, 6.1, 5.97, 8.1, 8.17, 7.99, 8.11, 8.25, 8.29, 8.14, 8.42, 8.32, 8.55],curr:false},
+  {label:'Б-17',color:'#facc15',data:[8.46, 8.52, 8.84, 8.63, 8.94, 8.87, 8.86, 9.09, 8.87, 9.18, 9.06, 9.01, 9.11, 9.29, 9.13, 9.16, 9.09, 9.2, 9.17, 8.93, 9.14, 8.77, 8.97, 8.71, 8.49, 8.59, 8.53, 8.62, 8.32, 8.42, 8.29, 8.07, 8.11, 5.81, 5.92, 5.78, 5.87, 5.95, 7.99, 8.04, 7.98, 7.92, 8.16, 8.23, 8.15, 8.16, 8.29, 8.37],curr:false},
+  {label:'Б-18',color:'#4ade80',data:[8.84, 8.86, 9.09, 8.91, 9.12, 9.21, 9.19, 9.37, 9.16, 9.34, 9.34, 9.24, 9.38, 9.56, 9.28, 9.29, 9.36, 9.42, 9.21, 9.19, 9.24, 9.02, 9.18, 8.96, 8.75, 8.67, 8.77, 8.8, 8.58, 8.56, 8.61, 8.34, 8.48, 6.11, 6.08, 6.15, 6.21, 6.06, 8.18, 8.15, 8.2, 8.29, 8.31, 8.45, 8.33, 8.41, 8.43, 8.61],curr:false},
+  {label:'Б-19',color:'#34d399',data:[8.95, 9.14, 9.36, 9.29, 9.42, 9.34, 9.28, 9.5, 9.55, 9.65, 9.56, 9.64, 9.77, 9.78, 9.59, 9.55, 9.76, 9.75, 9.64, 9.44, 9.59, 9.19, 9.41, 9.22, 9.17, 9.05, 9.08, 9.09, 8.7, 8.93, 8.83, 8.65, 8.71, 6.27, 6.34, 6.25, 6.39, 6.32, 8.46, 8.59, 8.56, 8.57, 8.67, 8.63, 8.55, 8.79, 8.83, 9.03],curr:false},
+  {label:'Б-20',color:'#2dd4bf',data:[8.55, 8.49, 8.7, 8.64, 8.83, 8.78, 8.77, 8.92, 8.97, 8.94, 9.05, 8.93, 9.14, 9.26, 8.95, 9.01, 9.11, 9.18, 8.97, 8.97, 9.07, 8.65, 8.89, 8.64, 8.54, 8.38, 8.43, 8.5, 8.22, 8.21, 8.24, 8.12, 8.16, 5.74, 5.73, 5.8, 5.78, 5.78, 7.94, 7.96, 8.02, 7.99, 8.17, 8.04, 8.09, 8.22, 8.21, 8.34],curr:false},
+  {label:'Б-21',color:'#38bdf8',data:[8.44, 8.38, 8.7, 8.57, 8.69, 8.84, 8.74, 8.92, 8.83, 9.01, 8.97, 9.0, 9.1, 9.25, 8.9, 8.88, 9.02, 9.07, 8.97, 8.89, 8.9, 8.63, 8.76, 8.52, 8.44, 8.38, 8.3, 8.32, 8.11, 8.15, 8.14, 8.01, 8.11, 5.69, 5.68, 5.64, 5.74, 5.73, 7.75, 7.9, 7.86, 7.84, 8.05, 8.11, 8.0, 8.14, 8.13, 8.33],curr:false},
+  {label:'Б-22',color:'#818cf8',data:[9.09, 9.06, 9.41, 9.25, 9.56, 9.5, 9.43, 9.69, 9.58, 9.63, 9.71, 9.75, 9.68, 9.81, 9.61, 9.68, 9.8, 9.89, 9.58, 9.48, 9.69, 9.24, 9.43, 9.32, 9.14, 9.1, 9.12, 9.17, 8.89, 8.93, 8.86, 8.7, 8.73, 6.55, 6.36, 6.49, 6.6, 6.45, 8.56, 8.58, 8.5, 8.61, 8.66, 8.85, 8.66, 8.76, 8.9, 9.05],curr:false},
+  {label:'Б-23',color:'#c084fc',data:[8.86, 8.74, 9.14, 9.01, 9.21, 9.2, 9.24, 9.35, 9.26, 9.3, 9.23, 9.39, 9.42, 9.54, 9.33, 9.34, 9.48, 9.47, 9.44, 9.34, 9.46, 9.09, 9.19, 8.99, 8.79, 8.69, 8.85, 8.74, 8.6, 8.55, 8.51, 8.34, 8.49, 6.09, 6.15, 6.1, 6.15, 6.1, 8.22, 8.21, 8.35, 8.19, 8.4, 8.5, 8.37, 8.5, 8.66, 8.81],curr:false},
+  {label:'Б-24',color:'#f472b6',data:[9.54, 9.44, 9.68, 9.74, 9.8, 9.91, 9.83, 10.11, 9.97, 10.05, 9.93, 9.99, 10.21, 10.36, 10.09, 9.98, 10.18, 10.15, 10.11, 9.91, 10.0, 9.66, 9.98, 9.6, 9.46, 9.39, 9.4, 9.51, 9.19, 9.34, 9.36, 9.19, 9.16, 6.76, 6.82, 6.83, 6.87, 6.91, 8.84, 9.04, 9.01, 8.99, 9.21, 9.09, 9.02, 9.26, 9.31, 9.43],curr:false},
+  {label:'Б-25',color:'#fb7185',data:[9.2, 9.21, 9.59, 9.44, 9.55, 9.72, 9.55, 9.82, 9.78, 9.76, 9.78, 9.86, 9.98, 9.95, 9.8, 9.8, 9.84, 9.86, 9.81, 9.65, 9.77, 9.46, 9.63, 9.5, 9.3, 9.14, 9.14, 9.36, 9.04, 9.1, 8.98, 8.84, 8.86, 6.55, 6.62, 6.62, 6.66, 6.59, 8.61, 8.8, 8.69, 8.66, 8.86, 8.85, 8.73, 8.93, 9.07, 9.11],curr:false},
+];
+
+// ── COMPARE STATE ──
+var activeCmp=[];
+
+function renderO2(sel) {
+  if(sel && sel.length){
+    var series=[];
+    sel.forEach(function(n){ series.push({data:n.data,color:n.color,width:n.curr?2.5:1.5,fill:false}); });
+    var hasCurr=sel.some(function(n){return n.curr;});
+    if(!hasCurr) series.unshift({data:O2_DATA,color:'#ef4444',width:2.5,fill:false});
+    drawLineChart('chartO2',{labels:LABELS,series:series,hlines:[{y:7.0,color:'#ef4444'},{y:8.0,color:'#f59e0b'}]});
+    var leg=document.getElementById('cmpLegend');
+    leg.innerHTML='';
+    var showList=hasCurr?sel:[{label:'Б-12',color:'#ef4444',curr:true}].concat(sel);
+    showList.forEach(function(n){
+      var d=document.createElement('div'); d.className='cmp-leg-item'+(n.curr?' curr':'');
+      d.innerHTML='<div class="cmp-leg-line" style="background:'+n.color+'"></div><span>'+n.label+'</span>';
+      leg.appendChild(d);
+    });
+    leg.classList.add('show');
+  } else {
+    drawLineChart('chartO2',{labels:LABELS,series:[{data:O2_DATA,color:'#ef4444',width:2,fill:true,fillColor:'#ef444420'}],hlines:[{y:7.0,color:'#ef4444'},{y:8.0,color:'#f59e0b'}]});
+    var leg=document.getElementById('cmpLegend');
+    if(leg){leg.classList.remove('show');leg.innerHTML='';}
+  }
+}
+
+function renderAll() {
+  renderO2(activeCmp.length ? activeCmp.map(function(i){return NEIGHBOURS[i];}) : null);
+  drawLineChart('chartTemp',{labels:LABELS,series:[{data:TEMP_DATA,color:'#0284c7',width:2,fill:true,fillColor:'#0284c720'}],hlines:[{y:9.5,color:'#f59e0b'}]});
+  renderFeeder();
+}
+
+// ── COMPARE POPUP ──
+function openCmpPopup() {
+  var list=document.getElementById('cmpList');
+  list.innerHTML='';
+  // current basin header
+  var hdr=document.createElement('div');
+  hdr.style.cssText='display:flex;align-items:center;gap:10px;padding:9px 0 10px;border-bottom:2px solid #e2e8f0;margin-bottom:6px;';
+  var cv=O2_DATA[O2_DATA.length-1];
+  var vc=cv<7?'#ef4444':cv<8?'#f59e0b':'#16a34a';
+  hdr.innerHTML='<div style="width:12px;height:12px;border-radius:50%;background:#ef4444;flex-shrink:0"></div>'
+    +'<span style="font-size:13px;font-weight:700;color:#0f172a;flex:1">Б-12 (текущий)</span>'
+    +'<span style="font-size:12px;font-weight:700;color:'+vc+'">'+cv+' мг/л</span>';
+  list.appendChild(hdr);
+
+  NEIGHBOURS.forEach(function(n,i){
+    if(n.curr) return;
+    var checked=activeCmp.indexOf(i)>=0;
+    var lv=n.data[n.data.length-1];
+    var vc2=lv<7?'#ef4444':lv<8?'#f59e0b':'#16a34a';
+    var row=document.createElement('label');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f8fafc;cursor:pointer;';
+    row.innerHTML='<input type="checkbox" data-idx="'+i+'"'+(checked?' checked':'')
+      +' style="width:15px;height:15px;accent-color:'+n.color+';cursor:pointer;flex-shrink:0">'
+      +'<div style="width:10px;height:10px;border-radius:50%;background:'+n.color+';flex-shrink:0"></div>'
+      +'<span style="font-size:13px;color:#1e293b;flex:1">'+n.label+'</span>'
+      +'<span style="font-size:12px;font-weight:600;color:'+vc2+'">'+lv+' мг/л</span>';
+    list.appendChild(row);
+  });
+  document.getElementById('cmpOverlay').style.display='flex';
+}
+
+function closeCmpPopup() { document.getElementById('cmpOverlay').style.display='none'; }
+
+function applyCmp() {
+  var checked=document.querySelectorAll('#cmpList input:checked');
+  activeCmp=[];
+  checked.forEach(function(cb){ activeCmp.push(parseInt(cb.getAttribute('data-idx'))); });
+  closeCmpPopup();
+  document.getElementById('cmpBtn').classList.toggle('active', activeCmp.length>0);
+  renderO2(activeCmp.length ? activeCmp.map(function(i){return NEIGHBOURS[i];}) : null);
+}
+
+// ── EVENTS ──
+var EVENTS=[
+  {time:"03:12",type:"alarm",msg:"Критически низкий O₂: 6.4 мг/л",who:"Система",ack:false},
+  {time:"03:10",type:"alarm",msg:"Низкий O₂: 7.1 мг/л",who:"Система",ack:false},
+  {time:"02:47",type:"warn",msg:"O₂ ниже порога предупреждения: 7.8 мг/л",who:"Система",ack:true},
+  {time:"01:30",type:"ok",msg:"Кормушка перезапущена",who:"Иванов А.",ack:true},
+  {time:"00:15",type:"service",msg:"Плановая проверка датчика O2-Б12-вых",who:"Петров В.",ack:true}
+];
+function buildEvents() {
+  var list=document.getElementById('eventList'); if(!list) return;
+  list.innerHTML='';
+  EVENTS.forEach(function(e){
+    var item=document.createElement('div'); item.className='event-item '+e.type;
+    item.innerHTML='<div class="event-dot '+e.type+'"></div><div style="flex:1"><div class="event-msg">'+e.msg+'</div>'
+      +'<div class="event-who" style="margin-top:2px">'+e.who+'</div></div>'
+      +'<div style="text-align:right"><div class="event-time">'+e.time+'</div>'
+      +'<div class="'+(e.ack?'event-ack':'event-unack')+'" style="margin-top:3px">'+(e.ack?'✓ Принято':'! Не принято')+'</div></div>';
+    list.appendChild(item);
+  });
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', function(){
+  buildEvents();
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      renderAll();
+      if(window.ResizeObserver){
+        var ro=new ResizeObserver(function(){ renderAll(); });
+        ['chartO2','chartTemp','chartFeeder'].forEach(function(id){
+          var el=document.getElementById(id);
+          if(el) ro.observe(el.parentElement);
+        });
+      } else {
+        window.addEventListener('resize', renderAll);
+      }
+    });
+  });
+});
 </script>
+
+<!-- COMPARE POPUP -->
+<div id="cmpOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this)closeCmpPopup()">
+  <div style="background:#fff;border-radius:14px;width:420px;max-width:96vw;max-height:88vh;box-shadow:0 8px 40px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #e2e8f0;flex-shrink:0">
+      <span style="font-weight:700;font-size:15px;color:#0f172a">Сравнение бассейнов группы А</span>
+      <button onclick="closeCmpPopup()" style="background:none;border:none;cursor:pointer;font-size:22px;color:#94a3b8;line-height:1;padding:0 4px">×</button>
+    </div>
+    <div style="padding:10px 20px 6px;font-size:12px;color:#64748b;flex-shrink:0">Выберите бассейны для сравнения O₂ с текущим (Б-12):</div>
+    <div id="cmpList" style="flex:1;overflow-y:auto;padding:0 20px 8px;min-height:0"></div>
+    <div style="padding:12px 20px;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid #f1f5f9;flex-shrink:0">
+      <button onclick="closeCmpPopup()" style="padding:8px 18px;border-radius:8px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-size:13px;cursor:pointer">Отмена</button>
+      <button onclick="applyCmp()" style="padding:8px 20px;border-radius:8px;border:none;background:#3b82f6;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Применить</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

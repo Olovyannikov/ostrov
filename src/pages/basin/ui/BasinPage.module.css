@@ -542,3 +542,242 @@
 .eventUnacked {
   color: var(--danger);
 }
+
+/* ── CHARTS COLUMN ── */
+.chartsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cardTitleWrap {
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.btnPrimary {
+  background: var(--primary);
+  color: #fff;
+  border: 1.5px solid var(--primary);
+}
+
+.btnPrimary:hover {
+  background: #0369a1;
+}
+
+/* ── O₂ COMPARE ── */
+.cmpBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: #f8fafc;
+  color: var(--muted);
+  transition: all 0.15s;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: auto;
+}
+
+.cmpBtn:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.cmpBtnActive {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.cmpLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 6px 0 10px;
+  padding: 7px 10px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.cmpLegItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #374151;
+}
+
+.cmpLegLine {
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.cmpLegCurr span {
+  font-weight: 700;
+}
+
+/* ── COMPARE POPUP ── */
+.cmpOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cmpModal {
+  background: #fff;
+  border-radius: 14px;
+  width: 420px;
+  max-width: 96vw;
+  max-height: 88vh;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cmpModalHdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  font-size: 15px;
+  color: #0f172a;
+  flex-shrink: 0;
+}
+
+.cmpClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  color: var(--muted);
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.cmpModalSub {
+  padding: 10px 20px 6px;
+  font-size: 12px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.cmpList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 20px 8px;
+  min-height: 0;
+}
+
+.cmpCurrentRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0 10px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cmpCurrentName {
+  flex: 1;
+  color: #0f172a;
+}
+
+.cmpRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid #f8fafc;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.cmpRowName {
+  flex: 1;
+  color: var(--text);
+}
+
+.cmpDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cmpModalFtr {
+  padding: 12px 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  border-top: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+
+/* ── FEEDER ACTIVITY ── */
+.feederStats {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.feederStat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.feederStatLbl {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.feederStatVal {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.feederChartWrap {
+  position: relative;
+  height: 130px;
+}
+
+/* ── ACK BANNER ── */
+.ackBanner {
+  background: var(--success-bg);
+  border: 1px solid #86efac;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--success);
+  margin-bottom: 10px;
+}
+
+.ackComment {
+  margin-top: 4px;
+  color: var(--text);
+  font-style: italic;
+}
