@@ -430,6 +430,17 @@
   font-weight: 400;
 }
 
+.statusComment {
+  display: inline-block;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-weight: 400;
+  font-style: italic;
+}
+
 .statusNew {
   color: var(--danger);
   font-size: 11px;

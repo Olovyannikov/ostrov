@@ -398,6 +398,21 @@
   background: var(--bg);
 }
 
+.threshParamInput {
+  width: 150px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.threshUnitInput {
+  width: 70px;
+  text-align: left;
+}
+
+.addParamBtn {
+  margin-top: 12px;
+}
+
 /* ─── Channel cards ─── */
 .channelGrid {
   display: grid;
